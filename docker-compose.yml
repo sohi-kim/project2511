@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: recipe-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: recipe_db
+      MYSQL_USER: recipe_user
+      MYSQL_PASSWORD: recipe_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: recipe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 3s
+      retries: 5
+
+  # Spring Boot Backend
+  spring-backend:
+    build:
+      context: ./spring-recipe-rag
+      dockerfile: Dockerfile
+    container_name: recipe-spring
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: recipe_db
+      DB_USER: recipe_user
+      DB_PASSWORD: recipe_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production-please"
+      RAG_SERVICE_URL: http://python-rag-service:8000
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/health"]
+      timeout: 10s
+      retries: 5
+
+  # Python RAG Service
+  python-rag-service:
+    build:
+      context: ./python-rag-service
+      dockerfile: Dockerfile
+    container_name: recipe-rag
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_ENVIRONMENT: gcp-starter
+      PINECONE_INDEX: recipes
+      EMBEDDING_MODEL: multilingual-e5-large
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8080"
+      PORT: 8000
+      WORKERS: 4
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      timeout: 10s
+      retries: 5
+    volumes:
+      - rag_models:/app/models
+
+  # React Frontend
+  react-frontend:
+    build:
+      context: ./react-recipe-ui
+      dockerfile: Dockerfile
+    container_name: recipe-ui
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - spring-backend
+    networks:
+      - recipe-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      timeout: 10s
+      retries: 5
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: recipe-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - spring-backend
+      - react-frontend
+      - python-rag-service
+    networks:
+      - recipe-network
+
+networks:
+  recipe-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  rag_models:
