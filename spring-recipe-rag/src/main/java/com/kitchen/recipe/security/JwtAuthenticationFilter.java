@@ -18,6 +18,8 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    // 하나의 요청(Request)에 대해 필터가 단 한 번만 실행되도록 보장하는 역할
+    //FORWARD, INCLUDE, ERROR 같은 서블릿 디스패처 동작에서도 필터가 한 번만 실행
 
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;

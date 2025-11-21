@@ -30,7 +30,21 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes());
     }
 
-    public String createToken(Authentication authentication) {
+
+    // Access Token 생성
+    public String createAccessToken(String email) {
+        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
+
+        return Jwts.builder()
+                .signWith(secretKey)
+                .subject(email)
+                .issuer("org.iclass")
+                .issuedAt(new Date())
+                .expiration(expiryDate)
+                .compact();
+    }
+
+    public String createToken(Authentication authentication) {  // X
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
         Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
 
@@ -101,7 +115,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // Authentication → Access Token 생성
+    // Authentication → Access Token 생성(사용 중 ⭕)
     public String generateAccessToken(Authentication authentication) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
         String email = userPrincipal.getUsername();

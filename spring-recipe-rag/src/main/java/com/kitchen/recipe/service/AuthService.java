@@ -1,6 +1,7 @@
 package com.kitchen.recipe.service;
 
 import com.kitchen.recipe.dto.AuthRequest;
+import com.kitchen.recipe.entity.RefreshToken;
 import com.kitchen.recipe.entity.User;
 import com.kitchen.recipe.exception.AppException;
 import com.kitchen.recipe.repository.UserRepository;
@@ -29,6 +30,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     public Map<String, Object> register(AuthRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -50,7 +52,7 @@ public class AuthService {
         return buildAuthResponse(savedUser, accessToken, refreshToken);
     }
 
-    public Map<String, Object> login(AuthRequest request) {
+    public Map<String, String> login(AuthRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -66,13 +68,31 @@ public class AuthService {
             userRepository.save(user);
 
             String accessToken = jwtTokenProvider.generateAccessToken(authentication);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
+            // String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-            return buildAuthResponse(user, accessToken, refreshToken);
+            // return buildAuthResponse(user, accessToken, refreshToken);
+            return Map.of("accessToken", accessToken,
+                          "refreshToken", refreshToken.getToken());
 
         } catch (BadCredentialsException e) {
             throw new AppException("이메일 또는 비밀번호가 잘못되었습니다.", 401);
         }
+    }
+
+    // Access Token 재발급 - New
+    public String refresh(String refreshTokenValue) {
+        RefreshToken refresh = refreshTokenService.validateRefreshToken(refreshTokenValue)
+                .orElseThrow(() -> new RuntimeException("RefreshToken invalid"));
+
+        return jwtTokenProvider.createAccessToken(refresh.getUser().getEmail());
+    }
+
+        // 로그아웃
+    public void logout(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow();
+        refreshTokenService.deleteByUser(user);
     }
 
     public Map<String, Object> refreshAccessToken(String refreshToken) {

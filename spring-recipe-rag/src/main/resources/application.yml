@@ -96,7 +96,3 @@ jwt:
   url: ${RAG_SERVICE_URL:http://python-rag-service:8000}
   timeout: ${RAG_SERVICE_TIMEOUT:30000}
 
-# Application Configuration
-app:
-  name: Kitchen Recipe RAG System
-  version: 1.0.0
