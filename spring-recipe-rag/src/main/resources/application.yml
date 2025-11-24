@@ -1,12 +1,13 @@
 spring:
   application:
     name: recipe-rag-service
-
+  config:
+    import: optional:file:.env[.properties]
   # DataSource Configuration
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:testdb}?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:password}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:db2511}?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    username: ${DB_USER:iclass}
+    password: ${DB_PASSWORD:Abc12345!}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -87,12 +88,13 @@ logging:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:756be4cf9581add13ddb3ab3e2f1e75f27a0661af1c1225a89ef9a1d44d3f03b}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}   # 기본 1시간. 24시간은 86400000
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
 
 # Python RAG Service Configuration
-'[rag-service]':
-  url: ${RAG_SERVICE_URL:http://python-rag-service:8000}
-  timeout: ${RAG_SERVICE_TIMEOUT:30000}
+python:
+  rag:
+    url: ${RAG_SERVICE_URL:http://python-rag-service:8000}
+    timeout: ${RAG_SERVICE_TIMEOUT:30000}
 

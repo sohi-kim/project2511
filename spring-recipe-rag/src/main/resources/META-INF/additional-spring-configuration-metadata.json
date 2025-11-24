@@ -4,14 +4,14 @@
   "description": "A description for 'jwt.expiration-ms'"
 },
 {
-  "name": "[rag-service].timeout",
+  "name": "python.rag.timeout",
   "type": "java.lang.String",
-  "description": "A description for '[rag-service].timeout'"
+  "description": "A description for 'python.rag.timeout'"
 },
 {
-  "name": "[rag-service].url",
+  "name": "python.rag.url",
   "type": "java.lang.String",
-  "description": "A description for '[rag-service].url'"
+  "description": "A description for 'python.rag.url'"
 },
 {
   "name": "jwt.secret",

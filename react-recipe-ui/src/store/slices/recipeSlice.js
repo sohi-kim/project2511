@@ -30,7 +30,7 @@ const recipeSlice = createSlice({
       state.isLoading = false
       state.error = action.payload
     },
-    setRecipe: (state, action) => {
+    setRecipes: (state, action) => {
       state.currentRecipe = action.payload
     },
     setAppliance: (state, action) => {
@@ -51,7 +51,7 @@ export const {
   searchStart,
   searchSuccess,
   searchFailure,
-  setRecipe,
+  setRecipes,
   setAppliance,
   setCurrentPage,
   clearRecipes
