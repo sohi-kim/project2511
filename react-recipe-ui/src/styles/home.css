@@ -1,0 +1,445 @@
+/* ====================================================================
+   Home 페이지 - 추가 스타일
+   ==================================================================== */
+
+/* 기본 여백 및 레이아웃 */
+.space-y-8 {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ====================================================================
+   Hero Section
+   ==================================================================== */
+
+.hero-section {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.hero-subtitle {
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.hero-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: white;
+  color: #3b82f6;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid white;
+}
+
+.hero-button:hover {
+  background-color: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.hero-button:active {
+  transform: translateY(0);
+}
+
+/* ====================================================================
+   Features 섹션
+   ==================================================================== */
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.feature-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #f3f4f6;
+}
+
+.feature-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+.feature-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon.search {
+  color: #3b82f6;
+  background-color: #dbeafe;
+  border-radius: 8px;
+}
+
+.feature-icon.heart {
+  color: #ef4444;
+  background-color: #fee2e2;
+  border-radius: 8px;
+}
+
+.feature-icon.clock {
+  color: #22c55e;
+  background-color: #dcfce7;
+  border-radius: 8px;
+}
+
+.feature-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.feature-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* ====================================================================
+   가전제품 섹션
+   ==================================================================== */
+
+.appliances-section {
+  margin-top: 2rem;
+}
+
+.section-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.appliances-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .appliances-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .appliances-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.appliance-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.appliance-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px) scale(1.05);
+  border-color: #3b82f6;
+}
+
+.appliance-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
+.appliance-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.appliance-description {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+/* ====================================================================
+   반응형 디자인
+   ==================================================================== */
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 2rem;
+  }
+
+  .hero-title {
+    font-size: 1.875rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .appliance-card {
+    padding: 1rem;
+  }
+
+  .appliance-icon {
+    font-size: 2rem;
+  }
+
+  .appliance-name {
+    font-size: 0.75rem;
+  }
+
+  .appliance-description {
+    font-size: 0.7rem;
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .space-y-8 {
+    gap: 1.5rem;
+  }
+
+  .hero-section {
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1rem;
+  }
+
+  .feature-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .feature-title {
+    font-size: 1rem;
+  }
+
+  .feature-description {
+    font-size: 0.75rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .appliances-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .appliance-card {
+    padding: 0.75rem;
+  }
+
+  .appliance-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .appliance-name {
+    font-size: 0.65rem;
+  }
+}
+
+/* ====================================================================
+   애니메이션
+   ==================================================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.hero-section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.feature-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.feature-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.feature-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.feature-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.appliance-card {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* ====================================================================
+   다크모드 지원 (선택사항)
+   ==================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  .feature-card {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .feature-title {
+    color: #f9fafb;
+  }
+
+  .feature-description {
+    color: #d1d5db;
+  }
+
+  .appliance-card {
+    background: #1f2937;
+  }
+
+  .appliance-name {
+    color: #f9fafb;
+  }
+
+  .appliance-description {
+    color: #9ca3af;
+  }
+
+  .section-title {
+    color: #f9fafb;
+  }
+}
+
+/* ====================================================================
+   이 CSS를 사용하는 방법
+   ==================================================================== */
+
+/*
+1. Home.jsx 상단에 추가:
+   import '../styles/home.css'
+
+2. 또는 index.css에 이 내용 추가
+
+3. Tailwind 클래스와 혼합해서 사용 가능
+
+예시:
+<div className="hero-section">
+  <div className="hero-content">
+    <h1 className="hero-title">...</h1>
+    <p className="hero-subtitle">...</p>
+    <a className="hero-button">...</a>
+  </div>
+</div>
+*/

@@ -1,0 +1,511 @@
+/* ====================================================================
+   Navbar - 네비게이션 바 스타일
+   ==================================================================== */
+
+/* ====================================================================
+   기본 Navbar 스타일
+   ==================================================================== */
+
+nav {
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* ====================================================================
+   Navbar 컨테이너
+   ==================================================================== */
+
+.navbar-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* sm 이상 */
+@media (min-width: 640px) {
+  .navbar-container {
+    padding: 0 1.5rem;
+  }
+}
+
+/* lg 이상 */
+@media (min-width: 1024px) {
+  .navbar-container {
+    padding: 0 2rem;
+  }
+}
+
+/* ====================================================================
+   Navbar 내부 레이아웃
+   ==================================================================== */
+
+.navbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+}
+
+/* ====================================================================
+   로고 섹션
+   ==================================================================== */
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.3s ease;
+}
+
+.navbar-logo:hover {
+  opacity: 0.8;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #3b82f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.5px;
+}
+
+/* ====================================================================
+   데스크톱 메뉴
+   ==================================================================== */
+
+.navbar-menu-desktop {
+  display: none;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* md 이상에서 표시 */
+@media (min-width: 768px) {
+  .navbar-menu-desktop {
+    display: flex;
+  }
+}
+
+/* ====================================================================
+   메뉴 링크
+   ==================================================================== */
+
+.navbar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.navbar-link:hover {
+  color: #3b82f6;
+}
+
+.navbar-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ====================================================================
+   사용자 정보 및 로그아웃
+   ==================================================================== */
+
+.navbar-user-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid #e5e7eb;
+}
+
+.navbar-username {
+  font-size: 0.875rem;
+  color: #4b5563;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: right;
+}
+
+.navbar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.navbar-logout-btn:hover {
+  color: #ef4444;
+}
+
+.navbar-logout-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ====================================================================
+   모바일 메뉴 버튼
+   ==================================================================== */
+
+.navbar-mobile-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.navbar-mobile-button:hover {
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.navbar-mobile-button svg {
+  width: 24px;
+  height: 24px;
+  color: #1f2937;
+}
+
+/* md 이상에서 숨김 */
+@media (min-width: 768px) {
+  .navbar-mobile-button {
+    display: none;
+  }
+}
+
+/* ====================================================================
+   모바일 메뉴
+   ==================================================================== */
+
+.navbar-menu-mobile {
+  display: none;
+  padding-bottom: 1rem;
+  space-y: 0.5rem;
+}
+
+/* md 미만에서 표시 */
+@media (max-width: 767px) {
+  .navbar-menu-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.navbar-mobile-link,
+.navbar-mobile-logout {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.navbar-mobile-link {
+  color: #1f2937;
+}
+
+.navbar-mobile-link:hover {
+  background-color: #f3f4f6;
+  color: #3b82f6;
+}
+
+.navbar-mobile-logout {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.navbar-mobile-logout:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* ====================================================================
+   반응형 디자인 - 작은 화면
+   ==================================================================== */
+
+@media (max-width: 480px) {
+  .navbar-content {
+    height: 56px;
+  }
+
+  .logo-text {
+    font-size: 1rem;
+  }
+
+  .navbar-username {
+    display: none;
+  }
+
+  .navbar-user-section {
+    display: none;
+  }
+
+  .navbar-mobile-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .navbar-mobile-logout {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* ====================================================================
+   활성 링크 상태
+   ==================================================================== */
+
+.navbar-link.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: calc(0.5rem - 2px);
+}
+
+.navbar-mobile-link.active {
+  background-color: #f0f9ff;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* ====================================================================
+   애니메이션
+   ==================================================================== */
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-menu-mobile {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* ====================================================================
+   아이콘 스타일 (Heroicons 호환)
+   ==================================================================== */
+
+.navbar-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+}
+
+.navbar-icon-mobile {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* ====================================================================
+   다크모드 (선택사항)
+   ==================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  nav {
+    background-color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .logo-text {
+    color: #f9fafb;
+  }
+
+  .navbar-link {
+    color: #d1d5db;
+  }
+
+  .navbar-link:hover {
+    color: #3b82f6;
+  }
+
+  .navbar-username {
+    color: #d1d5db;
+  }
+
+  .navbar-logout-btn {
+    color: #d1d5db;
+  }
+
+  .navbar-logout-btn:hover {
+    color: #ef4444;
+  }
+
+  .navbar-mobile-button svg {
+    color: #f9fafb;
+  }
+
+  .navbar-mobile-link {
+    color: #f9fafb;
+  }
+
+  .navbar-mobile-link:hover {
+    background-color: #374151;
+    color: #3b82f6;
+  }
+
+  .navbar-mobile-logout:hover {
+    background-color: #7f1d1d;
+    color: #fca5a5;
+  }
+
+  .navbar-user-section {
+    border-left-color: #374151;
+  }
+
+  .navbar-mobile-link.active {
+    background-color: #1e40af;
+    color: #3b82f6;
+  }
+}
+
+/* ====================================================================
+   접근성 (Accessibility)
+   ==================================================================== */
+
+.navbar-link:focus,
+.navbar-logout-btn:focus,
+.navbar-mobile-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.navbar-mobile-link:focus,
+.navbar-mobile-logout:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* ====================================================================
+   프린트 스타일 (인쇄)
+   ==================================================================== */
+
+@media print {
+  nav {
+    display: none;
+  }
+}
+
+/* ====================================================================
+   고해상도 디스플레이
+   ==================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar-link,
+  .navbar-logout-btn,
+  .navbar-mobile-link,
+  .navbar-mobile-logout,
+  .navbar-mobile-button,
+  .navbar-logo {
+    transition: none;
+  }
+
+  .navbar-menu-mobile {
+    animation: none;
+  }
+}
+
+/* ====================================================================
+   기타 상태
+   ==================================================================== */
+
+/* 스크롤 시 그림자 추가 (선택사항) */
+nav.scrolled {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 로드 중 상태 */
+.navbar-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ====================================================================
+   상단 페딩 (Navbar 아래 콘텐츠 여백)
+   ==================================================================== */
+
+body > main,
+.main-content {
+  margin-top: 0;
+}
+
+/* ====================================================================
+   Navbar가 sticky일 때 조정
+   ==================================================================== */
+
+@media (min-width: 768px) {
+  body > main {
+    margin-top: 0;
+  }
+}
+
+/* ====================================================================
+   추가: 배지 스타일 (로그인 상태 표시용)
+   ==================================================================== */
+
+.navbar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+}
+
+.navbar-badge.offline {
+  background-color: #6b7280;
+}
+
+.navbar-badge.error {
+  background-color: #ef4444;
+}

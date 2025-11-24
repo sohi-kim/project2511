@@ -4,6 +4,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { recipeService } from '../services/api'
 import { setRecipes, setAppliance, setCurrentPage } from '../store/slices/recipeSlice'
 import '../styles/index.css'
+import '../styles/search.css'
 
 function Search() {
   const [searchQuery, setSearchQuery] = useState('')
