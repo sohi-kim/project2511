@@ -1,6 +1,7 @@
 package com.kitchen.recipe.controller;
 
 import com.kitchen.recipe.dto.AuthRequest;
+import com.kitchen.recipe.entity.User;
 import com.kitchen.recipe.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -54,7 +56,7 @@ public class AuthController {
                 .path("/auth/refresh")   
                 // .secure(true)  //https 환경에서만 전송
                 .secure(false)
-                .sameSite("None")  // cross-site 요청에서도 쿠키 전송 허용
+                .sameSite("Lax")  // cross-site 요청에서도 쿠키 전송 허용
                 //쿠키의 domain/path/sameSite 속성으로 쿠키가 전송되는 범위를 제한할 수 있다.CORS 허용과 맞아야 함.
                 .maxAge(60 * 60 * 24 * 14)
                 .build();
@@ -90,15 +92,35 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue("accessToken") String accessToken) {
-        return ResponseEntity.ok("로그아웃 완료");
+    public ResponseEntity<?> logout(
+            @CookieValue(value = "refreshToken", required = false) String refreshTokenCookieValue,
+            @AuthenticationPrincipal User userDetails
+    ) {
+        // 1) DB에서 Refresh Token 삭제
+        authService.logout(userDetails.getUsername());
+
+        // 2) 쿠키 삭제 (Access Token, Refresh Token)
+        ResponseCookie clearAccessToken = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false) // 개발환경: false, 운영환경: true
+                .path("/")
+                .maxAge(0)     // 즉시 삭제
+                .sameSite("Lax")
+                .build();
+
+        ResponseCookie clearRefreshToken = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/auth/refresh")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearAccessToken.toString())
+                .header(HttpHeaders.SET_COOKIE, clearRefreshToken.toString())
+                .body("로그아웃 완료");
     }
-    // @PostMapping("/refresh")
-    // public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
-    //     String refreshToken = request.get("refreshToken");
-    //     Map<String, Object> response = authService.refreshAccessToken(refreshToken);
-    //     return ResponseEntity.ok(response);
-    // }
 
     @GetMapping("/health")
     public ResponseEntity<?> health() {

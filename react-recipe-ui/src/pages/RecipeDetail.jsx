@@ -11,7 +11,7 @@ function RecipeDetail() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { token } = useSelector(state => state.auth)
-  const { favoriteIds } = useSelector(state => state.favorite)
+  const { favoriteIds } = useSelector(state => state.favorite)  // Array
 
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -23,9 +23,10 @@ function RecipeDetail() {
     loadRecipeDetail()
   }, [id])
 
+  // favoriteIds Array에서 현재 레시피가 즐겨찾기되었는지 확인
   useEffect(() => {
     if (recipe) {
-      setIsFavorite(favoriteIds.has(recipe.id))
+      setIsFavorite(favoriteIds.includes(recipe.id))
     }
   }, [recipe, favoriteIds])
 

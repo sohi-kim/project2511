@@ -34,8 +34,12 @@ function Login() {
 
     try {
       setLoading(true)
-      const response = await authService.login(formData.email, formData.password)
+      const response = await authService.login(
+        formData.email,
+        formData.password
+      )
 
+      // Redux에 로그인 정보 저장
       dispatch(loginSuccess({
         user: {
           userId: response.data.userId,
@@ -46,10 +50,15 @@ function Login() {
         refreshToken: response.data.refreshToken
       }))
 
-      navigate('/')
+      // Redux 상태 업데이트는 동기적이므로 즉시 navigate 가능
+      // replace: true로 설정하면 뒤로가기 시 로그인 페이지로 돌아가지 않음
+      navigate('/', { replace: true })
+      
     } catch (err) {
-      setError(err.response?.data?.message || '로그인에 실패했습니다.')
-    } finally {
+      setError(
+        err.response?.data?.message || 
+        '로그인에 실패했습니다.'
+      )
       setLoading(false)
     }
   }

@@ -6,6 +6,7 @@ const initialState = {
   refreshToken: localStorage.getItem('refreshToken') || null,
   isLoading: false,
   error: null,
+  // ← 중요: isAuthenticated 플래그 추가
   isAuthenticated: !!localStorage.getItem('token')
 }
 
@@ -26,6 +27,7 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken
       state.isLoading = false
       state.error = null
+      // ← 중요: 로그인 성공 시 isAuthenticated = true
       state.isAuthenticated = true
 
       // localStorage에 토큰 저장
@@ -43,8 +45,9 @@ const authSlice = createSlice({
       state.user = null
       state.token = null
       state.refreshToken = null
+      // ← 중요: 로그인 실패 시 isAuthenticated = false
       state.isAuthenticated = false
-      
+
       localStorage.removeItem('token')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('user')
@@ -57,6 +60,7 @@ const authSlice = createSlice({
       state.refreshToken = null
       state.isLoading = false
       state.error = null
+      // ← 중요: 로그아웃 시 isAuthenticated = false
       state.isAuthenticated = false
 
       localStorage.removeItem('token')
@@ -68,7 +72,8 @@ const authSlice = createSlice({
     refreshTokenSuccess: (state, action) => {
       state.token = action.payload.token
       state.refreshToken = action.payload.refreshToken
-      
+      // isAuthenticated는 유지 (이미 로그인 상태)
+
       localStorage.setItem('token', action.payload.token)
       localStorage.setItem('refreshToken', action.payload.refreshToken)
     },
@@ -78,6 +83,7 @@ const authSlice = createSlice({
       state.token = null
       state.refreshToken = null
       state.user = null
+      // ← 중요: 토큰 갱신 실패 시 로그아웃 처리
       state.isAuthenticated = false
 
       localStorage.removeItem('token')
@@ -108,10 +114,13 @@ const authSlice = createSlice({
       if (token && refreshToken) {
         state.token = token
         state.refreshToken = refreshToken
+        // ← 중요: localStorage에서 복원할 때도 isAuthenticated = true
         state.isAuthenticated = true
         if (user) {
           state.user = JSON.parse(user)
         }
+      } else {
+        state.isAuthenticated = false
       }
     }
   }

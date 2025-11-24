@@ -4,7 +4,6 @@ import com.kitchen.recipe.dto.AuthRequest;
 import com.kitchen.recipe.entity.RefreshToken;
 import com.kitchen.recipe.entity.User;
 import com.kitchen.recipe.exception.AppException;
-import com.kitchen.recipe.repository.RefreshTokenRepository;
 import com.kitchen.recipe.repository.UserRepository;
 import com.kitchen.recipe.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +27,6 @@ import java.util.UUID;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
@@ -68,25 +64,12 @@ public class AuthService {
             User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException("사용자를 찾을 수 없습니다.", 404));
 
-             
             user.setLastLoginAt(LocalDateTime.now());
             userRepository.save(user);
 
             String accessToken = jwtTokenProvider.generateAccessToken(authentication);
             // String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
-
-            Optional<RefreshToken> existing = refreshTokenRepository.findByUser(user);
-            RefreshToken refreshToken=null;
-            if (existing.isPresent()) {
-                existing.get().setToken(UUID.randomUUID().toString());
-                existing.get().setExpiryDate(LocalDateTime.now().plusDays(14));
-                refreshTokenRepository.save(existing.get());
-            } else {
-                // createRefreshToken(user);
-                refreshToken = refreshTokenService.createRefreshToken(user);
-            }
-
-
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
             // return buildAuthResponse(user, accessToken, refreshToken);
             return Map.of("accessToken", accessToken,
