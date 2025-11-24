@@ -48,12 +48,13 @@ public class AuthController {
                 .sameSite("Lax")  
                 // 개발 환경에서 CSRF 공격 방어. Lax: 동일 사이트 및 일부 교차 사이트 요청에서만 쿠키 전송
                 .build();
-        // 아래 설정은 운영환경에서만.
+        // 아래 설정은 개발/ 운영환경에서 따라
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
                 .httpOnly(true)
                 .path("/auth/refresh")   
-                .secure(true)  //https 환경에서만 전송
-                .sameSite("None")
+                // .secure(true)  //https 환경에서만 전송
+                .secure(false)
+                .sameSite("None")  // cross-site 요청에서도 쿠키 전송 허용
                 //쿠키의 domain/path/sameSite 속성으로 쿠키가 전송되는 범위를 제한할 수 있다.CORS 허용과 맞아야 함.
                 .maxAge(60 * 60 * 24 * 14)
                 .build();
