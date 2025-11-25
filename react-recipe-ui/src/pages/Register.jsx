@@ -28,20 +28,20 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    // 유효성 검사
-    if (!formData.email || !formData.password || !formData.name) {
-      setError('모든 필드를 입력해주세요.')
-      return
-    }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다.')
+    // 유효성 검사
+    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.name) {
+      setError('모든 필드를 입력해주세요.')
       return
     }
 
     if (formData.password.length < 6) {
       setError('비밀번호는 최소 6자 이상이어야 합니다.')
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.')
       return
     }
 
@@ -53,22 +53,27 @@ function Register() {
         formData.name
       )
 
-      // Redux에 사용자 정보 저장
+      // 쿠키 기반 인증: user 정보만 Redux에 저장
+      // 토큰은 서버에서 쿠키로 자동 저장됨
       dispatch(loginSuccess({
         user: {
           userId: response.data.userId,
           email: response.data.email,
           name: response.data.name
-        },
-        token: response.data.token,
-        refreshToken: response.data.refreshToken
+        }
+        // token, refreshToken 필드 제거 ✅
+        // (쿠키에서 관리됨)
       }))
 
-      // 홈으로 이동
-      navigate('/')
+      // 회원가입 성공 후 홈으로 이동
+      // replace: true로 설정하면 뒤로가기에서 회원가입 페이지 제외
+      navigate('/', { replace: true })
+      
     } catch (err) {
-      setError(err.response?.data?.message || '회원가입에 실패했습니다.')
-    } finally {
+      setError(
+        err.response?.data?.message || 
+        '회원가입에 실패했습니다.'
+      )
       setLoading(false)
     }
   }
@@ -95,6 +100,8 @@ function Register() {
               placeholder="example@email.com"
               className="form-input"
               disabled={loading}
+              autoFocus
+              required
             />
           </div>
 
@@ -109,6 +116,7 @@ function Register() {
               placeholder="홍길동"
               className="form-input"
               disabled={loading}
+              required
             />
           </div>
 
@@ -123,7 +131,12 @@ function Register() {
               placeholder="••••••"
               className="form-input"
               disabled={loading}
+              minLength="6"
+              required
             />
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+              최소 6자 이상
+            </p>
           </div>
 
           <div className="form-group">
@@ -137,6 +150,8 @@ function Register() {
               placeholder="••••••"
               className="form-input"
               disabled={loading}
+              minLength="6"
+              required
             />
           </div>
 
@@ -145,7 +160,7 @@ function Register() {
             className="btn btn-primary btn-block"
             disabled={loading}
           >
-            {loading ? '가입 중...' : '가입하기'}
+            {loading ? '가입 중...' : '회원가입'}
           </button>
         </form>
 

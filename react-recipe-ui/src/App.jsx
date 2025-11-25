@@ -1,4 +1,4 @@
-import React from 'react'
+import {useEffect} from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import store from './store'
@@ -12,8 +12,15 @@ import Favorites from './pages/Favorites'
 import SearchHistory from './pages/SearchHistory'
 import PrivateRoute from './components/PrivateRoute'
 import './styles/index.css'
+import { useDispatch } from 'react-redux'
+import { loadFromLocalStorage } from './store/slices/authSlice'
 
 function App() {
+  const dispatch = useDispatch()
+  useEffect(() => {
+    dispatch(loadFromLocalStorage())
+  }, [dispatch])
+
   return (
     <Provider store={store}>
       <Router>
