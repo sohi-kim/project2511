@@ -6,7 +6,7 @@ import axios from 'axios'
  * 백엔드에서 accessToken, refreshToken을 HttpOnly 쿠키로 전송
  * axios는 자동으로 쿠키를 요청에 포함시킴
  */
-
+axios.defaults.withCredentials = true;
 // Axios 인스턴스 생성
 const api = axios.create({
   // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
@@ -31,39 +31,46 @@ api.interceptors.request.use(
 
 // 응답 인터셉터
 api.interceptors.response.use(
-  response => response,
+  res => res,
   async error => {
-    const originalRequest = error.config
+    const originalRequest = error.config;
 
-    // 401 (Unauthorized) 에러 처리
-    if (error.response?.status === 401) {
-      // 이미 refresh를 시도했으면 다시 시도하지 않음
-      if (originalRequest._retry) {
-        // 토큰 갱신 실패 → 로그인 페이지로 리다이렉트
-        window.location.href = '/login'
-        return Promise.reject(error)
-      }
+    // refresh 요청이면 retry 금지
+    const isRefreshRequest = originalRequest.url.endsWith('/auth/refresh');
+    if (isRefreshRequest) {
+      return Promise.reject(error);
+    }
 
-      originalRequest._retry = true
+    // accessToken 만료 → refresh 시도
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
       try {
-        // 백엔드의 refresh 엔드포인트 호출
-        // 백엔드에서 refreshToken 쿠키를 이용해 새 accessToken 발급
-        await api.post('/auth/refresh')
+        // refresh 요청은 헤더 제거 후 POST
+        await api.post('/auth/refresh', null, {
+          headers: { 'Content-Type': '' } // 혹은 삭제
+        });
 
-        // 새 accessToken이 쿠키에 저장됨
-        // 원본 요청 재시도
-        return api(originalRequest)
-      } catch (refreshError) {
-        // 토큰 갱신 실패 → 로그인 페이지로 리다이렉트
-        window.location.href = '/login'
-        return Promise.reject(refreshError)
+        // originalRequest 재요청
+        return api({
+          ...originalRequest,
+          headers: { ...(originalRequest.headers || {}) }
+        });
+
+      } catch (refreshErr) {
+        // refreshToken 만료/부재 시만 로그아웃
+        if (refreshErr.response?.status === 401) {
+          console.log("Refresh expired → logout");
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshErr);
       }
     }
 
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
+
 
 // ============================================================
 // API 서비스 함수들
@@ -71,6 +78,10 @@ api.interceptors.response.use(
 
 // 인증 서비스
 export const authService = {
+  // 사용자 정보 조회
+  me: () =>
+    api.get('/auth/me'),
+  
   // 회원가입
   register: (email, password, name) =>
     api.post('/auth/register', { email, password, name }),

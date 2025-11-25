@@ -1,29 +1,29 @@
 package com.kitchen.recipe.controller;
 
-import com.kitchen.recipe.dto.AuthRequest;
-import com.kitchen.recipe.entity.User;
-import com.kitchen.recipe.service.AuthService;
-
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
+import com.kitchen.recipe.dto.AuthRequest;
+import com.kitchen.recipe.entity.User;
+import com.kitchen.recipe.service.AuthService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -83,7 +83,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@CookieValue("refreshToken") String refreshToken) {
-
+        log.info("토큰 재발급 요청 받음 : {}",refreshToken);
         String newAccessToken = authService.refresh(refreshToken);
 
         ResponseCookie newAccessCookie = ResponseCookie.from("accessToken", newAccessToken)
@@ -132,8 +132,21 @@ public class AuthController {
                 .body(Map.of("message", "로그아웃 성공"));
     }
 
+        @GetMapping("/me")
+        public ResponseEntity<?> me(Authentication auth) {
+        if (auth == null) return ResponseEntity.status(401).build();
+
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(Map.of(
+        "email", user.getUsername(),
+        "name", user.getName()
+        ));
+        }
+
+
     @GetMapping("/health")
     public ResponseEntity<?> health() {
+         log.info("health : {}",LocalDateTime.now(ZoneId.of("UTC")));
         Map<String, String> response = new HashMap<>();
         response.put("status", "UP");
         response.put("service", "recipe-rag-service");

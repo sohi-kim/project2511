@@ -32,35 +32,31 @@ import './styles/index.css'
 function AppContent() {
   const dispatch = useDispatch()
 
-  // 앱 시작 시 또는 페이지 새로고침 시 세션 검증
   useEffect(() => {
-    const validateSession = async () => {
+    const restoreSession = async () => {
       try {
-        // 백엔드 헬스 체크로 쿠키 토큰 유효성 확인
-        // (쿠키는 브라우저가 자동으로 요청에 포함시킴)
-        const response = await authService.health()
-        
-        // 토큰이 유효하면 사용자 정보 복원
-        if (response.data && response.data.user) {
-          dispatch(loginSuccess({
-            user: response.data.user
-          }))
+        // 1) Refresh Token → AccessToken 자동 복구
+        await authService.refresh()
+
+        // 2) AccessToken 재발급 성공 → 사용자 정보 요청
+        const res = await authService.me()
+
+        if (res.data) {
+          dispatch(loginSuccess({ user: res.data }))
+          console.log("🔄 세션 복구 성공:", res.data)
         }
-      } catch (err) {
-        // 쿠키가 만료되었거나 유효하지 않음
-        // 상태는 기본값 유지 (로그아웃 상태)
-        console.log('Session validation failed - user needs to login')
+      } catch (error) {
+        console.log("❌ 세션 복구 실패 - 로그인 필요")
       }
     }
 
-    // 앱 초기화 시 세션 검증
-    validateSession()
+    restoreSession()
   }, [dispatch])
 
   return (
     <Router>
       <Routes>
-        {/* 공개 라우트 - 로그인/회원가입 */}
+        {/* 공개 라우트 */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -79,17 +75,16 @@ function AppContent() {
           <Route path="/history" element={<SearchHistory />} />
         </Route>
 
-        {/* 존재하지 않는 경로 처리 */}
+        {/* Not found → 홈으로 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )
 }
 
-/**
- * App 컴포넌트 (최상위)
- * Provider를 최상위에 배치하고 AppContent를 감싸기
- */
+// ---------------------------------------------------------------------
+// App (최상위 Provider)
+// ---------------------------------------------------------------------
 function App() {
   return (
     <Provider store={store}>
