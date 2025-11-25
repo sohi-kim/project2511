@@ -1,13 +1,26 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+/**
+ * 완전한 쿠키 기반 인증 상태 관리
+ * 
+ * 토큰 관리:
+ * - accessToken: HttpOnly 쿠키 (15분)
+ * - refreshToken: HttpOnly 쿠키 (7일)
+ * 
+ * Redux 관리:
+ * - user: 사용자 정보
+ * - isAuthenticated: 인증 상태 플래그
+ * 
+ * localStorage 완전 제거 ✅
+ */
+
 const initialState = {
   user: null,
-  token: localStorage.getItem('token') || null,
-  refreshToken: localStorage.getItem('refreshToken') || null,
   isLoading: false,
   error: null,
-  // ← 중요: isAuthenticated 플래그 추가
-  isAuthenticated: !!localStorage.getItem('token')
+  // ← 중요: 쿠키에서 관리하므로 직접 확인 불가
+  // API 호출 시 401 응답으로 토큰 만료 감지
+  isAuthenticated: false
 }
 
 const authSlice = createSlice({
@@ -21,21 +34,15 @@ const authSlice = createSlice({
     },
 
     // 로그인/회원가입 성공
+    // 백엔드에서 쿠키로 토큰 전송 (자동으로 저장됨)
     loginSuccess: (state, action) => {
       state.user = action.payload.user
-      state.token = action.payload.token
-      state.refreshToken = action.payload.refreshToken
       state.isLoading = false
       state.error = null
-      // ← 중요: 로그인 성공 시 isAuthenticated = true
       state.isAuthenticated = true
 
-      // localStorage에 토큰 저장
-      localStorage.setItem('token', action.payload.token)
-      localStorage.setItem('refreshToken', action.payload.refreshToken)
-      if (action.payload.user) {
-        localStorage.setItem('user', JSON.stringify(action.payload.user))
-      }
+      // 사용자 정보는 Redux 상태에만 저장
+      // (세션 유지가 필요하면 아래 로드 로직 참고)
     },
 
     // 로그인 실패
@@ -43,61 +50,30 @@ const authSlice = createSlice({
       state.isLoading = false
       state.error = action.payload
       state.user = null
-      state.token = null
-      state.refreshToken = null
-      // ← 중요: 로그인 실패 시 isAuthenticated = false
       state.isAuthenticated = false
 
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
+      // localStorage 제거 ✅
     },
 
     // 로그아웃
     logout: (state) => {
       state.user = null
-      state.token = null
-      state.refreshToken = null
       state.isLoading = false
       state.error = null
-      // ← 중요: 로그아웃 시 isAuthenticated = false
       state.isAuthenticated = false
 
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-    },
-
-    // 토큰 갱신 성공
-    refreshTokenSuccess: (state, action) => {
-      state.token = action.payload.token
-      state.refreshToken = action.payload.refreshToken
-      // isAuthenticated는 유지 (이미 로그인 상태)
-
-      localStorage.setItem('token', action.payload.token)
-      localStorage.setItem('refreshToken', action.payload.refreshToken)
-    },
-
-    // 토큰 갱신 실패
-    refreshTokenFailure: (state) => {
-      state.token = null
-      state.refreshToken = null
-      state.user = null
-      // ← 중요: 토큰 갱신 실패 시 로그아웃 처리
-      state.isAuthenticated = false
-
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
+      // 쿠키는 axios 인터셉터에서 서버 logout 요청으로 삭제됨
+    
     },
 
     // 사용자 정보 업데이트
     updateUser: (state, action) => {
-      state.user = {
-        ...state.user,
-        ...action.payload
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          ...action.payload
+        }
       }
-      localStorage.setItem('user', JSON.stringify(state.user))
     },
 
     // 에러 초기화
@@ -105,23 +81,20 @@ const authSlice = createSlice({
       state.error = null
     },
 
-    // localStorage에서 로드 (앱 초기화 시)
-    loadFromLocalStorage: (state) => {
-      const token = localStorage.getItem('token')
-      const refreshToken = localStorage.getItem('refreshToken')
-      const user = localStorage.getItem('user')
+    // 토큰 만료 또는 API 401 응답 시 호출
+    // (axios 인터셉터에서 자동 호출)
+    handleTokenExpired: (state) => {
+      state.user = null
+      state.isAuthenticated = false
+      state.error = '세션이 만료되었습니다. 다시 로그인해주세요.'
+    },
 
-      if (token && refreshToken) {
-        state.token = token
-        state.refreshToken = refreshToken
-        // ← 중요: localStorage에서 복원할 때도 isAuthenticated = true
-        state.isAuthenticated = true
-        if (user) {
-          state.user = JSON.parse(user)
-        }
-      } else {
-        state.isAuthenticated = false
-      }
+    // 페이지 새로고침 시 인증 상태 복원
+    // (쿠키는 브라우저가 자동으로 유지하므로 검증만 함)
+    validateSession: (state) => {
+      // 쿠키가 유효하면 사용자 정보 복원
+      // (API 헬스 체크로 쿠키 유효성 확인)
+      // 별도로 처리 필요하면 useEffect에서 구현
     }
   }
 })
@@ -132,11 +105,10 @@ export const {
   loginSuccess,
   loginFailure,
   logout,
-  refreshTokenSuccess,
-  refreshTokenFailure,
   updateUser,
   clearError,
-  loadFromLocalStorage
+  handleTokenExpired,
+  validateSession
 } = authSlice.actions
 
 // Reducer를 default export

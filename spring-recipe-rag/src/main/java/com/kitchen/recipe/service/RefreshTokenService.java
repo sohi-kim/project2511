@@ -17,13 +17,13 @@ import lombok.RequiredArgsConstructor;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    // private final UserRepository userRepository;
+    
 
     public RefreshToken createRefreshToken(User user) {
         RefreshToken token = RefreshToken.builder()
                 .token(UUID.randomUUID().toString())
                 .user(user)
-                .expiryDate(LocalDateTime.now().plusDays(14))
+                .expiryDate(LocalDateTime.now().plusDays(7))
                 .build();
 
         return refreshTokenRepository.save(token);

@@ -20,8 +20,8 @@ public class JwtTokenProvider {
     private String secretKeyString;
 
     @Value("${jwt.expiration-ms}")
-    private long jwtExpirationInMs;
-
+    private long REFRESH_EXP_MS ;
+    private long ACCESS_EXP_MS = 1000 * 60 * 15; // 15min
     private SecretKey secretKey;
 
     @PostConstruct
@@ -33,7 +33,7 @@ public class JwtTokenProvider {
 
     // Access Token 생성
     public String createAccessToken(String email) {
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
+        Date expiryDate = new Date(System.currentTimeMillis() + ACCESS_EXP_MS );
 
         return Jwts.builder()
                 .signWith(secretKey)
@@ -44,18 +44,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createToken(Authentication authentication) {  // X
-        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
-
-        return Jwts.builder()
-                .signWith(secretKey)
-                .subject(userPrincipal.getUsername())
-                .issuer("org.iclass")
-                .issuedAt(new Date())
-                .expiration(expiryDate)
-                .compact();
-    }
 
     // 클라이언트가 보낸 토큰(메소드 인자 String token)을 검증하는 메소드
     public String getUsernameFromToken(String token) {
@@ -88,7 +76,7 @@ public class JwtTokenProvider {
 
     // Access Token 생성
     public String generateAccessTokenFromEmail(String email) {
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
+        Date expiryDate = new Date(System.currentTimeMillis() + ACCESS_EXP_MS);
 
         return Jwts.builder()
                 .signWith(secretKey)
@@ -102,9 +90,8 @@ public class JwtTokenProvider {
     // Refresh Token 생성 (유효기간 더 길게)
     public String generateRefreshToken(String email) {
         // Refresh Token 만료시간 = Access Token의 7배(예시)
-        long refreshExpiration = jwtExpirationInMs * 7;
 
-        Date expiryDate = new Date(System.currentTimeMillis() + refreshExpiration);
+        Date expiryDate = new Date(System.currentTimeMillis() + REFRESH_EXP_MS);
 
         return Jwts.builder()
                 .signWith(secretKey)
@@ -120,7 +107,7 @@ public class JwtTokenProvider {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
         String email = userPrincipal.getUsername();
 
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
+        Date expiryDate = new Date(System.currentTimeMillis() + ACCESS_EXP_MS);
 
         return Jwts.builder()
                 .signWith(secretKey)
@@ -144,7 +131,7 @@ public class JwtTokenProvider {
 
     // Access Token 만료시간(ms) 반환
     public long getExpirationTime() {
-        return jwtExpirationInMs;
+        return ACCESS_EXP_MS;
 }
 
 }

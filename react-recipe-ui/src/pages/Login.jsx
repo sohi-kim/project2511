@@ -39,19 +39,20 @@ function Login() {
         formData.password
       )
 
-      // Redux에 로그인 정보 저장
+      // 쿠키 기반 인증: user 정보만 Redux에 저장
+      // 토큰은 서버에서 쿠키로 자동 저장됨
       dispatch(loginSuccess({
         user: {
           userId: response.data.userId,
           email: response.data.email,
           name: response.data.name
-        },
-        token: response.data.token,
-        refreshToken: response.data.refreshToken
+        }
+        // token, refreshToken 필드 제거 ✅
+        // (쿠키에서 관리됨)
       }))
 
-      // Redux 상태 업데이트는 동기적이므로 즉시 navigate 가능
-      // replace: true로 설정하면 뒤로가기 시 로그인 페이지로 돌아가지 않음
+      // 로그인 성공 후 홈으로 이동
+      // replace: true로 설정하면 뒤로가기에서 로그인 페이지 제외
       navigate('/', { replace: true })
       
     } catch (err) {
@@ -86,6 +87,7 @@ function Login() {
               className="form-input"
               disabled={loading}
               autoFocus
+              required
             />
           </div>
 
@@ -100,6 +102,7 @@ function Login() {
               placeholder="••••••"
               className="form-input"
               disabled={loading}
+              required
             />
           </div>
 

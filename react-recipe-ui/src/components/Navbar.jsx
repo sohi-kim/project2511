@@ -1,11 +1,27 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, HeartIcon, ClockIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline'
+import { logout } from '../store/slices/authSlice'
+import { authService } from '../services/api'
 import '../styles/navbar.css'
 
-function Navbar({ onLogout, user }) {
+/**
+ * Navbar 컴포넌트 (쿠키 기반)
+ * 
+ * 로그아웃 시:
+ * 1. authService.logout() 호출 (백엔드에 로그아웃 요청)
+ * 2. 백엔드: Set-Cookie로 쿠키 삭제
+ * 3. Redux dispatch(logout()) (프론트 상태 초기화)
+ * 4. /login으로 리다이렉트
+ */
+function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const user = useSelector(state => state.auth.user)
 
   const isActive = (path) => location.pathname === path
 
@@ -15,9 +31,35 @@ function Navbar({ onLogout, user }) {
     { path: '/history', label: '검색 이력', icon: ClockIcon }
   ]
 
-  const handleLogout = () => {
-    setMobileMenuOpen(false)
-    onLogout()
+  const handleLogout = async () => {
+    try {
+      setLoading(true)
+      
+      // 1️⃣ 백엔드에 로그아웃 요청
+      // 백엔드에서:
+      // - Set-Cookie: accessToken=; Max-Age=0 (쿠키 삭제)
+      // - Set-Cookie: refreshToken=; Max-Age=0 (쿠키 삭제)
+      await authService.logout()
+      
+      // 2️⃣ Redux 상태 초기화
+      dispatch(logout())
+      
+      // 3️⃣ 모바일 메뉴 닫기
+      setMobileMenuOpen(false)
+      
+      // 4️⃣ 로그인 페이지로 리다이렉트
+      navigate('/login', { replace: true })
+      
+    } catch (err) {
+      console.error('Logout failed:', err)
+      
+      // 로그아웃 API 실패 시에도 로컬 상태는 초기화
+      // (쿠키는 이미 만료되었을 수 있음)
+      dispatch(logout())
+      navigate('/login', { replace: true })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -50,12 +92,14 @@ function Navbar({ onLogout, user }) {
             <div className="navbar-user-section">
               <span className="navbar-username">{user?.name || '사용자'}</span>
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
+                disabled={loading}
                 className="navbar-logout-btn"
                 aria-label="로그아웃"
+                title={loading ? '로그아웃 중...' : '로그아웃'}
               >
                 <ArrowLeftOnRectangleIcon className="navbar-icon" />
-                <span>로그아웃</span>
+                <span>{loading ? '로그아웃 중...' : '로그아웃'}</span>
               </button>
             </div>
           </div>
@@ -65,6 +109,7 @@ function Navbar({ onLogout, user }) {
             className="navbar-mobile-button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="메뉴"
+            disabled={loading}
           >
             {mobileMenuOpen ? (
               <XMarkIcon className="navbar-icon-mobile" />
@@ -89,10 +134,11 @@ function Navbar({ onLogout, user }) {
             ))}
             <button
               onClick={handleLogout}
+              disabled={loading}
               className="navbar-mobile-logout"
               aria-label="로그아웃"
             >
-              로그아웃
+              {loading ? '로그아웃 중...' : '로그아웃'}
             </button>
           </div>
         )}
