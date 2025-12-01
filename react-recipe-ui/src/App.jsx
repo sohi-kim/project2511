@@ -46,7 +46,11 @@ function AppContent() {
           console.log("🔄 세션 복구 성공:", res.data)
         }
       } catch (error) {
-        console.log("❌ 세션 복구 실패 - 로그인 필요")
+        if (error.response?.status === 401) {
+           console.log("session restore failed! (401) - login required.")
+      } else {
+          console.log("session failed! :", error)
+      }
       }
     }
 

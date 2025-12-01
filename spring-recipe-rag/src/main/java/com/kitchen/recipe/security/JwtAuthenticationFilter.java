@@ -11,10 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.kitchen.recipe.service.CustomUserDetailsService;
+
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 
 import java.io.IOException;
 
@@ -26,12 +29,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     //FORWARD, INCLUDE, ERROR 같은 서블릿 디스패처 동작에서도 필터가 한 번만 실행
 
     private final JwtTokenProvider tokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+            log.info("JwtAuthenticationFilter 동작 중...");
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
@@ -47,10 +51,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.info("인증된 사용자: {}", authentication.getName());
             }
-        } catch (Exception ex) {
-            log.error("Could not set user authentication in security context", ex);
-        }
+            // ⬇ JwtAuthenticationFilter → token 검사 → 만료/유효성 오류 → 401 리턴
+        } catch (ExpiredJwtException e) {
+            // ★ AccessToken 만료 → 401
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Access token expired");
+            return;
 
+        } catch (JwtException | IllegalArgumentException e) {
+            // ★ 기타 JWT 오류 → 401
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid JWT");
+            return;
+        }
         filterChain.doFilter(request, response);
     }
     private String getJwtFromRequest(HttpServletRequest request) {
@@ -59,6 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("accessToken".equals(cookie.getName())) {  // ← accessToken 찾기
+                    log.info("coolie value : {}",cookie.getValue());
                     return cookie.getValue();  // ← 토큰 값 반환
                 }
             }

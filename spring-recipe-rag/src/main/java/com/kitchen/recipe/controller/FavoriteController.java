@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/favorites")
+@RequestMapping("/api/favorites")
 @RequiredArgsConstructor
 @Slf4j
 public class FavoriteController {
@@ -58,6 +58,7 @@ public class FavoriteController {
 
     @GetMapping
     public ResponseEntity<?> getFavorites(Authentication authentication) {
+        log.info("getFavorites 💥💥");
         User currentUser = (User) authentication.getPrincipal();
         List<RecipeDto> favorites = favoriteService.getUserFavorites(currentUser);
         

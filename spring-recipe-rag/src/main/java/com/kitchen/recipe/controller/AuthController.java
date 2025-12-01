@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -61,7 +62,7 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
                 .httpOnly(true)
                 .secure(false) // 개발 환경에서는 false, 운영 환경에서는 true로 설정
-                .path("/api/auth/refresh")   
+                .path("/")   // 🧡 리액트 post 요청 경로와 맞춰야 함
                 // .secure(true)  //https 환경에서만 전송
                 .sameSite("None")  // cross-site 요청에서도 쿠키 전송 허용
                 //쿠키의 domain/path/sameSite 속성으로 쿠키가 전송되는 범위를 제한할 수 있다.CORS 허용과 맞아야 함.
@@ -82,10 +83,15 @@ public class AuthController {
     
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@CookieValue("refreshToken") String refreshToken) {
+    public ResponseEntity<?> refresh(@CookieValue(value = "refreshToken",required = false) 
+                                String refreshToken) {
         log.info("토큰 재발급 요청 받음 : {}",refreshToken);
+        
+        if(refreshToken == null) {
+                return ResponseEntity.status(401).body(Map.of("message", "유효하지 않은 Refresh Token"));
+        }
+        
         String newAccessToken = authService.refresh(refreshToken);
-
         ResponseCookie newAccessCookie = ResponseCookie.from("accessToken", newAccessToken)
                 .httpOnly(true)
                 .secure(false)
@@ -102,27 +108,27 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
             @CookieValue(value = "refreshToken", required = false) String refreshTokenCookieValue,
-        //     @AuthenticationPrincipal User userDetails
-            Authentication authentication
+            @AuthenticationPrincipal User userDetails
+        //     Authentication authentication
     ) {
         // 1) DB에서 Refresh Token 삭제
-        log.info("로그아웃 요청: {}-{}", authentication.getName(), refreshTokenCookieValue);
-        authService.logout(authentication.getName());
+        log.info("로그아웃 요청: {}-{}", userDetails.getName(), refreshTokenCookieValue);
+        authService.logout(userDetails.getUsername());
 
         // 2) 쿠키 삭제 (Access Token, Refresh Token)
         ResponseCookie clearAccessToken = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(false) // 개발환경: false, 운영환경: true
                 .path("/")
-                .maxAge(0)     // 즉시 삭제
+                .maxAge(-1)     // 즉시 삭제
                 .sameSite("Lax")
                 .build();
 
         ResponseCookie clearRefreshToken = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(false)
-                .path("/api/auth/refresh")
-                .maxAge(0)
+                .path("/")
+                .maxAge(-1)
                 .sameSite("None")
                 .build();
 

@@ -2,6 +2,8 @@ package com.kitchen.recipe.config;
 
 import com.kitchen.recipe.security.JwtAuthenticationFilter;
 import com.kitchen.recipe.security.JwtTokenProvider;
+import com.kitchen.recipe.service.CustomUserDetailsService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +34,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {

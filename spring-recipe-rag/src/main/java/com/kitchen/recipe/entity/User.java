@@ -52,7 +52,7 @@ public class User implements UserDetails {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        role = "ROLE_USER";
+        role = "USER";
     }
 
     @PreUpdate
@@ -63,7 +63,9 @@ public class User implements UserDetails {
     // UserDetails Implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(role));
+        return Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
     }
 
     @Override

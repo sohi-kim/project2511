@@ -56,22 +56,17 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String authToken) {
+        log.info("validateToken💥");
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(authToken);
             return true;
-        } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty");
+        } catch (JwtException | IllegalArgumentException ex) {
+            // ★ 여기서 false 반환 금지
+            throw ex;   // 필터에서 처리할 수 있도록 예외 그대로 던짐
         }
-        return false;
     }
 
     // Access Token 생성

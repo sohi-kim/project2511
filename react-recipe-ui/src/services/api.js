@@ -47,6 +47,7 @@ api.interceptors.response.use(
 
       try {
         // refresh 요청은 헤더 제거 후 POST
+        console.log("AccessToken expired → try refresh");
         await api.post('/auth/refresh', null, {
           headers: { 'Content-Type': '' } // 혹은 삭제
         });
