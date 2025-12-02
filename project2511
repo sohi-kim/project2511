@@ -1,0 +1,336 @@
+주방기구에 포함된 요리책을 RAG 로 구성하는 프로젝트.
+1. spring boot 백엔드 : 인증,좋아요,사용자 pdf 업로드, db  , redis 응답 캐쉬 활용
+2. react(UI) 프론트엔드 
+3. rag : 파이썬, 파인콘 벡터 db  를 구축하고 llm 을 활용하여 유사한 질문들에 대해 동일한 해쉬로 검색할 수 있는 응답 캐쉬 redis 구성
+
+📶--- 윈도우에서 포트 확인
+Test-NetConnection -ComputerName 127.0.0.1 -Port 3306
+Get-NetTCPConnection -LocalPort 3306
+
+📶--- node js 설치
+
+sudo apt install nodejs npm -y
+node -v
+npm -v
+
+    C:\class250616\React>npx create-vite@latest lesson02 --template react
+    C:\class250616\React>cd lesson02
+    - 패키지 설치
+    C:\class250616\React\lesson01>npm install
+    - 개발 모드로 실행 -
+    C:\class250616\React\lesson01>npm run dev
+    - 빌드(배포)-
+    C:\class250616\React\lesson01>npm run build
+
+
+📶---redis 서버
+sudo apt update
+sudo apt install redis-server -y
+sudo systemctl status redis
+redis-cli
+127.0.0.1:6379> ping
+PONG
+
+
+📶---가상 머신 디스크 공간 늘리기
+VM을 종료합니다. 호스트 OS에서 터미널
+C:\Program Files\Oracle\VirtualBox>VBoxManage modifymedium "C:\Users\admin\VirtualBox VMs\ubuntu-24.04_New\ubuntu-24.04_New-disk001.vdi" --resize 40000
+
+디스크 용량 확인 : lsblk
+sda
+ ├─sda1  EFI
+ └─sda2  Linux filesystem (20G)
+확장 명령 실행:
+sudo growpart /dev/sda 2
+sudo resize2fs /dev/sda2
+df -h
+
+--------------------- 참고
+캐쉬 삭제
+sudo apt-get clean
+pip cache purge
+확인
+df -h /dev/sda2
+du -sh /home/* /var/* /tmp/*
+
+
+
+📶--- Ubuntu에서 Miniconda 설치
+wget으로 설치 스크립트를 다운로드하고, bash로 실행한 뒤 환경 설정을 적용
+
+@터미널 시작 시 base 환경이 자동으로 켜지는 게 불편하다면, 아래 설정을 바꾸면 됩니다:
+자동 활성화 끄기 :  conda config --set auto_activate_base false
+→ 이 설정은 ~/.condarc 또는 ~/.conda/config.yaml에 저장됩니다.
+@ PATH 설정 : nano ~/.bashrc  에서 export PATH=/home/iclass/miniconda3/bin:$PATH 추가하기
+
+
+1. sudo apt update && sudo apt upgrade -y
+필수 도구 설치: sudo apt install -y wget
+여유 공간 최소 400MB 확보
+
+2. Miniconda 설치 파일 다운로드
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+(선택) 무결성 확인:
+sha256sum Miniconda3-latest-Linux-x86_64.sh
+3. 설치 실행
+bash Miniconda3-latest-Linux-x86_64.sh
+설치 과정에서 라이선스 동의 후, 기본 경로(~/miniconda3) 선택.
+4. 환경 변수 설정
+설치 후 Conda 명령어 활성화:
+source ~/.bashrc
+Conda 버전 확인: conda --version
+5. 사용 예시
+새로운 가상환경 생성:
+conda create -n myenv python=3.10
+환경 활성화: conda activate myenv
+
+설치 후 PATH 설정이 올바르지 않으면 conda 명령어가 동작하지 않을 수 있으니 반드시 source ~/.bashrc 실행하세요.
+source ~/.bashrc  명령어 동작 의미
+짧은 답변:  source ~/.bashrc 명령어는 현재 셸에서 바로 ~/.bashrc 파일의 내용을 실행하여 환경 변수와 설정을 즉시 반영하는 역할을 합니다
+
+🔎 자세한 설명
+1. source 명령어의 기본 동작
+일반 실행 (bash 파일명) : 새로운 하위 셸(subprocess)을 만들어 그 안에서 스크립트를 실행합니다.
+따라서 스크립트 내부에서 설정한 환경 변수나 경로 변경은 현재 셸에 반영되지 않습니다.
+
+source 파일명 실행 : 새로운 프로세스를 만들지 않고, 현재 셸에서 직접 실행합니다.
+파일 안의 export PATH=... 같은 환경 변수 설정이 즉시 현재 터미널 세션에 적용됩니다
+
+2. ~/.bashrc 파일의 역할
+~/.bashrc는 사용자별 Bash 초기화 설정 파일입니다.
+주요 내용: PATH, alias, prompt 설정
+
+3. 왜 source ~/.bashrc를 쓰는가?
+~/.bashrc를 수정한 뒤, 터미널을 새로 열지 않고도 변경 사항을 즉시 반영하기 위해 사용합니다.
+
+4. 추가 팁
+source는 Bash 내장 명령어이며, POSIX 표준에서는 .(점) 명령어로 동일한 기능을 수행합니다.  --> . ~/.bashrc
+→ source ~/.bashrc와 동일
+
+✅ conda init bash
+→ Bash 쉘 초기화 설정을 적용합니다.
+
+. 초기화 되돌리기 (reverse 옵션)
+만약 이전에 conda init으로 설정한 것을 되돌리고 싶다면:
+conda init --reverse bash
+
+
+✅  conda-forge 채널 추가
+conda install -c conda-forge gradio openai python-dotenv
+→ conda-forge 채널은 커뮤니티에서 관리하는 대규모 패키지 저장소로, 많은 최신 패키지가 포함되어 있습니다.
+
+pip 사용 (추천)
+→대부분의 최신 ML/AI 관련 라이브러리는 PyPI에서 관리되므로, Conda 환경을 만든 뒤 pip로 설치하는 것이 일반적입니다:
+
+which pip
+→ 경로가 ~/miniconda3/envs/환경이름/bin/pip 형태로 나와야 정상입니다.
+
+👉 혹시 conda create로 환경을 만들 때 어떤 옵션을 사용하셨나요? (--no-default-packages 같은 옵션을 쓰면 pip이 빠질 수 있습니다).
+
+conda create -n llmEnv python=3.10
+conda create --name myenv 만 입력하면 빈 환경이 만들어집니다.
+즉, Python도 pip도 설치되지 않은 상태라서 conda activate myenv 후에 python이나 pip 명령어가 동작하지 않는 게 정상이에요.
+
+🐍 Conda 환경에 Python 설치하기
+
+conda install python=3.10
+python --version
+→ Python 3.10.x 같은 결과가 나오면 정상입니다.
+
+🐍 가상환경 삭제
+삭제하려는 환경 이름을 지정해서 제거합니다:
+conda remove --name llmEnv --all
+--all → 해당 환경의 모든 패키지와 설정을 제거
+
+conda install -c conda-forge gradio openai python-dotenv
+conda activate newEnv
+pip install gradio openai python-dotenv
+conda update conda
+📌 정리:  
+이 오류는 대부분 패키지를 찾을 수 없거나 의존성 충돌 때문에 발생합니다. 특히 gradio, openai, dotenv 같은 패키지는 Conda 기본 채널에 없으므로 conda-forge 채널을 쓰거나 pip install을 사용하는 것이 가장 확실한 해결책입니다.
+
+
+📶--- 🐧 Ubuntu에서 MySQL 8.x 설치 단계
+정보
+db2511
+iclass
+Abc1234??
+1. 패키지 업데이트
+
+sudo apt update
+sudo apt upgrade -y
+2. MySQL 서버 설치
+Ubuntu 20.04/22.04에서는 기본 저장소에 MySQL 8.x가 포함되어 있습니다:
+sudo apt install mysql-server -y
+
+3. 서비스 시작 및 자동 실행 설정
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+4. 보안 초기 설정
+설치 후 보안을 강화하기 위해 다음 스크립트를 실행합니다:
+sudo mysql_secure_installation
+`루트 비밀번호 설정
+`익명 사용자 제거
+`테스트 DB 삭제
+`원격 루트 접속 제한
+
+5. MySQL 접속 확인
+mysql -u root -p
+→ 비밀번호 입력 후 정상 접속되면 설치 완료.
+
+⚙️ 추가 설정 (선택)
+외부 접속 허용: /etc/mysql/mysql.conf.d/mysqld.cnf 파일에서 bind-address를 0.0.0.0으로 변경 후 서비스 재시작.
+
+CREATE USER 'iclass'@'%' IDENTIFIED BY 'Abc1234^&';
+GRANT ALL PRIVILEGES ON *.* TO 'iclass'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+[ MySQL ] MySQL 설치하기 (Ubuntu)
+🔎 왜 root 암호를 지정하지 않았을까?
+Ubuntu 기본 패키지 정책
+apt install mysql-server로 설치하면, 설치 과정에서 root 암호를 묻지 않습니다.
+대신 auth_socket 플러그인을 사용해서, Ubuntu 시스템의 root 사용자로 로그인하면 MySQL root 계정에도 바로 접근할 수 있게 설정됩니다.
+즉, 암호 없이 sudo mysql 명령으로 접속 가능합니다.
+보안 초기화 스크립트 : 설치 후 sudo mysql_secure_installation을 실행하면 root 암호를 새로 지정할 수 있습니다.
+여기서 암호 설정, 익명 사용자 제거, 원격 접속 제한 등을 할 수 있습니다.
+
+✅ 확인 방법
+현재 root 계정 접속:
+sudo mysql
+→ 암호 없이 접속됩니다.
+SELECT user, host, plugin FROM mysql.user WHERE user='root';
+→ plugin이 auth_socket이면 암호 대신 시스템 root 계정으로 인증하는 방식입니다.
+
+🔐 root 암호 설정하기
+만약 암호 기반 로그인으로 바꾸고 싶다면:
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '새암호';
+FLUSH PRIVILEGES;
+→ 이후에는 mysql -u root -p로 접속할 수 있습니다.
+
+📌 정리
+Ubuntu에서 MySQL 8.x 설치 시 root 암호를 기본으로 묻지 않는 이유는 auth_socket 인증 방식 때문입니다.
+따라서 sudo mysql로 접속하면 암호 없이 root 권한을 사용할 수 있습니다.
+필요하다면 mysql_secure_installation이나 ALTER USER 명령으로 암호를 직접 설정할 수 있습니다.
+
+- root 계정 인증 방식 확인
+SELECT user, host, plugin FROM mysql.user WHERE user='root';
+plugin이 auth_socket이면 암호 대신 시스템 root 계정으로 인증하는 방식입니다.
+
+-. root 계정에 패스워드 지정
+암호 기반 인증으로 바꾸려면:
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '새로운패스워드';
+FLUSH PRIVILEGES;
+
+🔐 추가 팁
+보안 초기화 스크립트로도 설정 가능:
+sudo mysql_secure_installation
+→ 여기서 root 암호 설정, 익명 사용자 제거, 원격 접속 제한 등을 한 번에 처리할 수 있습니다.
+
+📌 정리
+Ubuntu 기본 설치는 root 암호를 묻지 않고 auth_socket 인증을 사용합니다.
+
+
+📶--- 데이터베이스 최초 작업
+> CREATE DATABASE db2511;
+> GRANT ALL PRIVILEGES ON db2511.* TO 'iclass'@'%';
+mysql -u iclass -p
+> use db2511;
+> show tables;
+> create table test ( id int);
+
+📶--- 우분투(클라우드) 계정
+sudo passwd 사용자이름
+sudo adduser 새계정이름
+sudo usermod -aG sudo 새계정이름
+su - 새계정이름
+sudo whoami
+exit  또는 ctrl+D
+cat /etc/passwd
+사용자명:x:UID:GID:설명:홈디렉토리:로그인쉘
+cut -d: -f1 /etc/passwd
+who
+📶--- 우분투 최초 설치
+sudo apt update
+sudo apt install net-tools
+ip addr show
+ifconfig
+sudo apt install -y openjdk-21-jdk
+java --version
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export PATH=$JAVA_HOME/bin:$PATH
+echo $JAVA_HOME
+
+vi ~/.bashrc  환경변수(export) 설정 추가
+
+sudo apt install -y maven gradle
+
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+sudo apt install -y nodejs
+
+sudo apt install docker.io -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+groups $USER
+
+📶--- 인바운드 규칙 내 ip 확인하기 : curl https://ipinfo.io/ip
+📶--- ssh 키 접속 확인
+ssh -vvv sohkim@ip -i C:\Users\admin\.ssh\SSH_KeyPair.pem
+
+📶--- ssh 접속 시 주의 사항
+서버에 콘솔 또는 다른 방법으로 로그인해서 아래 명령 실행:
+cd ~/.ssh
+ls -l
+authorized_keys 존재하는지 확인
+
+
+✔ 1단계. PEM → Public key 추출
+
+Windows(Git Bash, WSL, Linux 어디서든):
+ssh-keygen -y -f ~/.ssh/SSH_KeyPair.pem > id_rsa.pub
+공개키가 id_rsa.pub 로 생성됨.
+
+✔ 2단계. 서버에 업로드
+
+서버에서:
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
+id_rsa.pub 내용을 아래 파일에 붙여 넣기:
+~/.ssh/authorized_keys
+
+그리고 권한 설정:
+chmod 600 ~/.ssh/authorized_keys
+
+✔ 3단계. sshd 설정 확인
+sudo nano /etc/ssh/sshd_config
+
+확인해야 할 항목:
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication yes   # 있어도 됨 (fallback 용)
+
+
+변경 후 재시작:
+sudo systemctl restart sshd
+
+📶----- github ssh
+
+클라우드 서버에서 SSH 키 생성:
+[bash]
+ssh-keygen -t ed25519 -C "your_email@example.com"
+→ ~/.ssh/id_ed25519 (개인키), ~/.ssh/id_ed25519.pub (공개키) 생성
+
+공개키 확인:
+[bash]
+cat ~/.ssh/id_ed25519.pub
+→ 이 문자열을 복사해서 GitHub 계정(Settings → SSH and GPG keys)에 등록
+
+테스트:
+[bash]
+ssh -T git@github.com
+→ "You've successfully authenticated" 메시지가 나오면 정상
+
+저장소 클론 시 SSH 주소 사용:
+[bash]
+git clone git@github.com:username/repo.git
