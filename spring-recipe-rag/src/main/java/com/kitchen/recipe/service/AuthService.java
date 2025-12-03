@@ -125,9 +125,10 @@ public class AuthService {
         response.put("userId", user.getId());
         response.put("email", user.getEmail());
         response.put("name", user.getName());
-        response.put("token", accessToken);
+        response.put("accessToken", accessToken);
         response.put("refreshToken", refreshToken);
         response.put("expiresIn", jwtTokenProvider.getExpirationTime());
+        log.info("login resp : {}",response);
         return response;
     }
 
