@@ -10,7 +10,7 @@ axios.defaults.withCredentials = true;
 // Axios 인스턴스 생성
 const api = axios.create({
   // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'https://nolre.shop/api',
   timeout: 30000,
   // ← 중요: 쿠키를 요청에 자동으로 포함시킬 수 있도록 설정
   withCredentials: true

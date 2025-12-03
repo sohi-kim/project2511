@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { loginSuccess } from '../store/slices/authSlice'
 import { authService } from '../services/api'
-import '../styles/index.css'
+import '../index.css'
 
 function Login() {
   const [formData, setFormData] = useState({

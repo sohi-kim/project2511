@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:db2511}?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
     username: ${DB_USER:iclass}
-    password: ${DB_PASSWORD:Abc12345!}
+    password: ${DB_PASSWORD:Abc1234^&}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20

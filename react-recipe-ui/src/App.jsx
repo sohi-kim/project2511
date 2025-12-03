@@ -22,7 +22,7 @@ import { loginSuccess, handleTokenExpired } from './store/slices/authSlice'
 import { authService } from './services/api'
 
 // Styles
-import './styles/index.css'
+import './index.css'
 
 /**
  * AppContent 컴포넌트

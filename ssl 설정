@@ -1,0 +1,81 @@
+공인ip 를 사용하는 클라우드 서버 우분투에 무료 ssl 설치하고 프론트엔드와 백엔트 https 로 통신하기
+- Ubuntu 클라우드 서버에서 무료 SSL을 설치하려면 
+Let’s Encrypt의 Certbot을 사용. 도메인을 공인 IP에 연결한 뒤, 웹 서버(Apache/Nginx)에 SSL 인증서를 적용하면 
+프론트엔드와 백엔드 모두 HTTPS로 안전하게 통신할 수 있습니다.
+
+🌐--- 준비 단계
+-공인 IP: 클라우드 서버에 공인 IP가 있어야 외부에서 접근 가능합니다.
+-도메인 연결: SSL 인증서는 IP가 아닌 도메인 기반으로 발급되므로, 반드시 도메인을 공인 IP에 연결해야 합니다.
+-방화벽 설정: 80(HTTP), 443(HTTPS) 포트를 열어둡니다.
+
+🔑--- SSL 설치 (Let’s Encrypt + Certbot)
+
+1. Certbot 설치
+
+Apache:
+[bash]
+sudo apt install certbot python3-certbot-apache
+Nginx:
+[bash]
+sudo apt install certbot python3-certbot-nginx
+확인 ➡ systemctl status nginx
+
+
+
+2. DNS 설정
+💥가비아 서비스 관리 - DNS 관리 - DNS 설정(A레코드 호스트 www , @ 2개 설정)
+도메인 소유 확인: 
+"Let's Encrypt"는 인증서를 발급할 때 해당 도메인이 실제로 당신 서버를 가리키는지 확인합니다.
+
+HTTP-01 챌린지: 웹 서버를 통해 도메인 소유권을 증명하는 방식
+--nginx 옵션을 쓰면 Certbot이 
+Nginx에 임시 설정을 추가해 http://example.com/.well-known/... 경로로 인증 요청을 처리합니다.
+
+이때, 외부에서 example.com과 www.example.com을 접속했을 때 클라우드 서버의 IP로 연결되어야 합니다.
+(보안 그룹 인바운드 80 포트 허용)
+
+필요한 준비
+[DNS A 레코드]
+example.com → 클라우드 서버의 공인 IP
+www.example.com → 동일한 클라우드 서버의 공인 IP
+(IPv6을 지원한다면 AAAA 레코드도 추가 가능)
+
+실행 순서
+클라우드 서버의 공인 IP 확인
+DNS 관리 콘솔(도메인 등록기관, Cloudflare, AWS Route53 등)에 A 레코드 등록
+➡ `dig example.com` 또는 `nslookup example.com`으로 DNS가 올바르게 서버 IP를 가리키는지 확인
+
+➡ Nginx가 정상적으로 실행 중인지 확인 (sudo systemctl status nginx)
+
+3. 인증서 발급 및 적용
+Apache:
+[bash]
+sudo certbot --apache -d example.com -d www.example.com
+Nginx:
+[bash]
+sudo certbot --nginx -d example.com -d www.example.com
+➡ example.com 부분에 실제 도메인을 입력하세요.
+(sudo certbot --nginx -d nolre.shop -d www.nolre.shop)
+
+4. 자동 갱신 설정
+
+[bash]
+sudo certbot renew --dry-run
+에러 없이 실행되면 인증서가 자동으로 갱신됩니다.
+
+
+💛--- 프록시
+프록시가 누구를 대신하느냐(클라이언트 vs 서버)와 트래픽 흐름의 방향이 반대로 동작하기 때문에 “Reverse”라고 부릅니다.
+
+대리 대상: Forward Proxy는 “클라이언트”를 대신해 외부 서버로 나가고, Reverse Proxy는 “서버”를 대신해 외부 클라이언트의 요청을 받아들입니다.
+
+관점(위치): Forward Proxy는 클라이언트 앞에 서서 인터넷으로 나가는 요청을 중계하고, Reverse Proxy는 서버 앞에 서서 인터넷에서 들어오는 요청을 중계합니다.
+
+트래픽 흐름: Forward: Client → Proxy → Internet(Server) Reverse: Client(Internet) → Reverse Proxy → Internal Server
+
+역할 차이: Forward는 클라이언트 익명화/캐싱/접근 제어에 초점, Reverse는 로드 밸런싱/SSL 종료/웹 방화벽/캐싱/원서버 보호에 초점이 있습니다.
+
+text
+Forward Proxy:  Client -> [Forward Proxy] -> Internet Servers
+Reverse Proxy:  Internet Clients -> [Reverse Proxy] -> Origin Servers
+즉, “Reverse”는 프록시가 클라이언트가 아니라 “서버 측을 대표”하고, 외부에서 내부로 들어오는 요청을 받아 “원서버로 되돌려(redirect가 아님) 전달”하는 구조를 가리킵니다.

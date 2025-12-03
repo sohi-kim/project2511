@@ -43,7 +43,7 @@ public class AuthService {
         );
     }
 
-    public Map<String, Object> register(AuthRequest request) {
+    public String register(AuthRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException("이미 가입된 이메일입니다.", 400);
         }
@@ -57,13 +57,14 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        String accessToken = jwtTokenProvider.generateAccessTokenFromEmail(savedUser.getEmail());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser.getEmail());
+        // String accessToken = jwtTokenProvider.generateAccessTokenFromEmail(savedUser.getEmail());
+        // String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser.getEmail());
 
-        return buildAuthResponse(savedUser, accessToken, refreshToken);
+        // return buildAuthResponse(savedUser, accessToken, refreshToken);
+        return savedUser.getEmail();
     }
 
-    public Map<String, String> login(Authentication authentication) {
+    public Map<String, Object> login(Authentication authentication) {
         try {
             
             User user = userRepository.findByEmail(authentication.getName())
@@ -81,9 +82,8 @@ public class AuthService {
             log.info("User authenticated: {}, {}", user.getEmail(), authentication.getName());
 
 
-            // return buildAuthResponse(user, accessToken, refreshToken);
-            return Map.of("accessToken", accessToken,
-                          "refreshToken", refreshToken.getToken());
+            return buildAuthResponse(user, accessToken, refreshToken.getToken());
+            // return Map.of("accessToken", accessToken,"refreshToken", refreshToken.getToken());
 
         } catch (BadCredentialsException e) {
             throw new AppException("이메일 또는 비밀번호가 잘못되었습니다.", 401);
@@ -100,6 +100,7 @@ public class AuthService {
 
         // 로그아웃
     public void logout(String email) {
+        log.info("logout service: {}", email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow();
         refreshTokenService.deleteByUser(user);

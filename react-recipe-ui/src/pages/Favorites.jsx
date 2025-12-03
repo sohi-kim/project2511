@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { favoriteService } from '../services/api'
 import { setFavorites, removeFavorite } from '../store/slices/favoriteSlice'
-import '../styles/index.css'
+import '../index.css'
 
 function Favorites() {
   const dispatch = useDispatch()

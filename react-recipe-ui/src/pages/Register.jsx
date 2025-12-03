@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { loginSuccess } from '../store/slices/authSlice'
 import { authService } from '../services/api'
-import '../styles/index.css'
+import '../index.css'
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -54,20 +54,20 @@ function Register() {
       )
 
       // 쿠키 기반 인증: user 정보만 Redux에 저장
-      // 토큰은 서버에서 쿠키로 자동 저장됨
-      dispatch(loginSuccess({
-        user: {
-          userId: response.data.userId,
-          email: response.data.email,
-          name: response.data.name
-        }
-        // token, refreshToken 필드 제거 ✅
-        // (쿠키에서 관리됨)
-      }))
+      // 회원 가입 후 로그인 바로 실행하지 않음.
+      // dispatch(loginSuccess({
+      //   user: {
+      //     userId: response.data.userId,
+      //     email: response.data.email,
+      //     name: response.data.name
+      //   }
+        
+      // }))
 
-      // 회원가입 성공 후 홈으로 이동
+      // 회원가입 성공 후 로그인으로 이동
       // replace: true로 설정하면 뒤로가기에서 회원가입 페이지 제외
-      navigate('/', { replace: true })
+      alert('회원가입이 완료되었습니다.로그인 해주세요.')
+      navigate('/login', { replace: true })
       
     } catch (err) {
       setError(

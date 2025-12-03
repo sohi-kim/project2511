@@ -1,0 +1,148 @@
+
+✅ 전체 아키텍처
+
+1.사용자가 브라우저에서 https://example.com 접근
+2.Nginx가 React 빌드 파일 제공
+3.React에서 /api/** 요청
+4.Nginx가 reverse proxy → http://localhost:8080
+5.Spring Boot에서 응답 후 HTTPS로 다시 전달
+
+
+### Nginx 설정 파일 
+1) 메인 설정 파일
+/etc/nginx/nginx.conf
+➡ 여기는 직접 수정하지 않는 것을 권장합니다.
+(서브 설정 파일들을 include 하는 역할만 합니다.)
+
+2) 사이트 설정(가상 호스트) 디렉토리
+활성 사이트
+/etc/nginx/sites-enabled/
+
+설정 파일을 작성하는 위치(실제 편집 장소)
+/etc/nginx/sites-available/
+
+사용 예:
+아래 위치에 설정 파일 생성:
+sudo nano /etc/nginx/sites-available/example.com.conf
+sudo vi /etc/nginx/sites-available/nolre.shop.conf
+
+~~~~
+server {
+    listen 80;
+    server_name nolre.shop www.nolre.shop;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name nolre.shop www.nolre.shop;
+
+    ssl_certificate /etc/letsencrypt/live/nolre.shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/nolre.shop/privkey.pem;
+
+    # React 정적 파일
+    root /var/www/react-app;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    # Spring Boot API
+    location /api/ {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+~~~~ 그리고 
+활성화:
+sudo ln -s /etc/nginx/sites-available/nolre.shop.conf /etc/nginx/sites-enabled/
+참고 :
+➡하드 링크(hard link): 같은 파일 시스템 내에서 원본 파일과 동일한 inode를 가리킵니다. 
+원본이 삭제되어도 데이터는 남아있습니다.
+➡심볼릭 링크(symbolic link, symlink): -s 옵션
+원본 파일의 경로를 가리키는 일종의 “바로가기”. 원본이 삭제되면 링크는 깨집니다.
+~~~ 그리고 
+Ubuntu Nginx는 기본적으로 아래 파일이 활성화되어 있습니다:
+/etc/nginx/sites-enabled/default
+이 파일이 존재하면 example.com 요청을 default 서버 블록(/var/www/html 에서 정적파일) 이 가로챕니다.
+[해결 방법]
+sudo rm /etc/nginx/sites-enabled/default
+sudo systemctl restart nginx
+
+✔ 이것만으로 대부분 /var/www/react-app이 반영됩니다.
+
+### 프론트엔드 & 백엔드 HTTPS 통신
+
+프론트엔드 서버: React/Vue/Angular 같은 SPA를 Nginx/Apache에 배포 후 HTTPS 적용.
+백엔드 서버: Node.js, Django, Spring 등 API 서버에도 동일하게 SSL 적용.
+
+[react]
+const api = axios.create({
+  // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+  baseURL: 'https://nolre.shop/api',
+  timeout: 30000,
+  // ← 중요: 쿠키를 요청에 자동으로 포함시킬 수 있도록 설정
+  withCredentials: true
+})
+
+[java]
+configuration.setAllowedOrigins(Arrays.asList(
+            // "http://localhost:3000",
+            // "http://localhost:5173"
+            "https://nolre.shop"
+        ));
+
+✅ React 빌드 파일 준비
+
+프로젝트 폴더에서:
+npm run build
+
+생성된 dist/ 폴더를 서버에 업로드하고:
+sudo mv dist/* /var/www/react-app
+
+Nginx가 읽도록 권한 부여:
+sudo chown -R www-data:www-data /var/www/react-app
+
+
+✅ Spring Boot 서버는 HTTPS 설정 필요 없음
+Spring Boot는 그냥 평범하게 8080 HTTP 서버로 두면 됩니다.
+Nginx가 이미 SSL 복호화·암호화를 처리하므로:
+Spring Boot는 SSL 설정 필요 없음
+server.ssl.* 설정도 필요 없음
+포트도 8080 그대로 사용
+
+✔ 이렇게 구성하면 장점
+SSL 관리 - 단일화	인증서, HTTPS 설정은 Nginx에서만 관리
+성능	 - 내부 트래픽은 HTTP라 부담 적음
+CORS/쿠키 처리	- Nginx 레이어에서 Domain/Cookie 제어 가능
+React 배포	- Nginx가 React 정적 파일도 서빙 가능
+
+✔ 결론
+React → https://example.com/api/...
+Nginx → http://localhost:8080 (Spring Boot)
+
+이 구조가 표준적인 Production 구조입니다.
+
+✔ 통신 방식:
+프론트엔드 → 백엔드 호출 시 https://example.com/api/.. 형태로 HTTPS 요청.
+CORS 설정 시 반드시 https:// 도메인을 허용해야 합니다.
+프록시 서버(Nginx)로 프론트엔드와 백엔드를 묶어 HTTPS 트래픽을 관리하면 효율적입니다.
+
+➡ 주의할 점
+IP만으로는 SSL 발급 불가 → 반드시 도메인 필요.
+테스트 환경에서는 self-signed 인증서를 쓸 수 있지만, 실제 서비스는 Let’s Encrypt 권장.
+자동 갱신 실패 방지 → cron job 또는 systemd timer 확인.
+
+➡ 요약
+도메인을 공인 IP에 연결 → Certbot으로 SSL 발급 
+→ 프론트엔드와 백엔드 각각 HTTPS 적용 → 프록시 서버로 통합 관리가 가장 안정적인 방법입니다.

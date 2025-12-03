@@ -229,6 +229,9 @@ sudo mysql_secure_installation
 📌 정리
 Ubuntu 기본 설치는 root 암호를 묻지 않고 auth_socket 인증을 사용합니다.
 
+💛 원격 접속
+/etc/mysql/mysql.conf.d/mysqld.cnf → 실제 bind-address 를 127.0.0.1 로 두고
+연결 시 Standard TCP/IP 대신 Standard TCP/IP over SSH 방식.(mysql 서버주소는 localhost)
 
 📶--- 데이터베이스 최초 작업
 > CREATE DATABASE db2511;

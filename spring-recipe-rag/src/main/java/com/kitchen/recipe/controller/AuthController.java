@@ -40,47 +40,58 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody AuthRequest request) {
         log.info("회원가입 요청: {}", request.getEmail());
-        Map<String, Object> response = authService.register(request);
-        return ResponseEntity.ok(response);
+        String email = authService.register(request);
+        if(email !=null && email.length() !=0)
+                return ResponseEntity.ok(Map.of("result","success"));
+        else    
+                return ResponseEntity.badRequest().build();
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
 
         Authentication authentication=authService.authenticate(request.getEmail(), request.getPassword());
-        Map<String, String> tokens = authService.login(authentication);
+        Map<String, Object> resp = authService.login(authentication);
 
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", (String) resp.get("accessToken"))
                 .httpOnly(true)
-                .secure(false) // 개발 환경에서는 false, 운영 환경에서는 true로 설정
+                .secure(true) // 개발 환경에서는 false, 운영 환경에서는 true로 설정 가능
                 .path("/")
                 .maxAge(jwtExpirationInMs / 1000)    // 초 단위
                 .sameSite("Lax")  
                 // 개발 환경에서 CSRF 공격 방어. Lax: 동일 사이트 및 일부 교차 사이트 요청에서만 쿠키 전송
                 .build();
-        // 아래 설정은 개발/ 운영환경에서 따라
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
+        //  운영환경
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", (String)resp.get("refreshToken"))
                 .httpOnly(true)
-                .secure(false) // 개발 환경에서는 false, 운영 환경에서는 true로 설정
-                .path("/")   // 🧡 리액트 post 요청 경로와 맞춰야 함
-                // .secure(true)  //https 환경에서만 전송
+                .secure(true) // 운영 환경에서 true로 설정이 필수
+                .path("/auth/refresh")   // 🧡 리액트 post 요청 경로와 맞춰야 함
                 .sameSite("None")  // cross-site 요청에서도 쿠키 전송 허용
-                //쿠키의 domain/path/sameSite 속성으로 쿠키가 전송되는 범위를 제한할 수 있다.CORS 허용과 맞아야 함.
                 .maxAge(60 * 60 * 24 * 14)
                 .build();
+                /*
+                브라우저는 쿠키를 저장하지만,
+                React 코드에서는 그 쿠키 값을 읽거나 조작할 수 없다.
+                하지만 서버 요청 시 브라우저가 자동(withCredentials: true)으로 쿠키를 붙여 보낸다.(XSS 공격 방어)
+                # localStroage, sesionStorage 는 JS 코드에서 접근 가능하기 때문에 XSS 공격에 취약하다.
+                */        
+               log.info("로그인 시간 : {}", LocalDateTime.now(ZoneId.of("UTC")));
+               return ResponseEntity.ok()
+               .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+               .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+               .body(resp );
+        }
         /*
-        브라우저는 쿠키를 저장하지만,
-        React 코드에서는 그 쿠키 값을 읽거나 조작할 수 없다.
-        하지만 서버 요청 시 브라우저가 자동(withCredentials: true)으로 쿠키를 붙여 보낸다.(XSS 공격 방어)
-        # localStroage, sesionStorage 는 JS 코드에서 접근 가능하기 때문에 XSS 공격에 취약하다.
-        */        
-        log.info("로그인 시간 : {}", LocalDateTime.now(ZoneId.of("UTC")));
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(Map.of("message", "로그인 성공") );
-    }
-    
+        //쿠키의 domain/path/sameSite 속성으로 쿠키가 전송되는 범위를 제한할 수 있다.CORS 허용과 맞아야 함.
+        SameSite 속성에 따른 "전송"이라는 표현은 브라우저가 서버로 HTTP 요청을 보낼 때 
+        쿠키를 함께 첨부하는 동작을 의미합니다. 즉:
+방향: 브라우저 → 서버 사용자가 브라우저에서 어떤 요청(예: API 호출, 페이지 이동)을 보낼 때,
+ 브라우저가 조건에 따라 쿠키를 붙여서 서버로 전달합니다.
+SameSite=Strict → 동일 사이트 요청에서만 쿠키 전송.
+SameSite=Lax → 대부분의 동일 사이트 요청 + 일부 cross-site GET 요청에서 전송.
+SameSite=None; Secure → 모든 요청(크로스 사이트 포함)에서 전송, 단 HTTPS 필요.
+            인증서버가 다른 도메인일 수 있음.
+*/
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@CookieValue(value = "refreshToken",required = false) 
@@ -94,9 +105,9 @@ public class AuthController {
         String newAccessToken = authService.refresh(refreshToken);
         ResponseCookie newAccessCookie = ResponseCookie.from("accessToken", newAccessToken)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
-                .maxAge(60 * 15)
+                .maxAge(jwtExpirationInMs / 1000)
                 .sameSite("Lax")
                 .build();
 
@@ -118,17 +129,17 @@ public class AuthController {
         // 2) 쿠키 삭제 (Access Token, Refresh Token)
         ResponseCookie clearAccessToken = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
-                .secure(false) // 개발환경: false, 운영환경: true
+                .secure(true) 
                 .path("/")
-                .maxAge(-1)     // 즉시 삭제
+                .maxAge(0)     // 즉시 삭제
                 .sameSite("Lax")
                 .build();
 
         ResponseCookie clearRefreshToken = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(-1)
+                .secure(true)
+                .path("/auth/refresh")
+                .maxAge(0)
                 .sameSite("None")
                 .build();
 

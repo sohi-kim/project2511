@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { recipeService } from '../services/api'
-import '../styles/index.css'
+import '../index.css'
 
 function SearchHistory() {
   const navigate = useNavigate()

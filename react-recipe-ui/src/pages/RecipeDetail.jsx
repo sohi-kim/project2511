@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { recipeService } from '../services/api'
 import { favoriteService } from '../services/api'
 import { addFavorite, removeFavorite } from '../store/slices/favoriteSlice'
-import '../styles/index.css'
+import '../index.css'
 
 function RecipeDetail() {
   const { id } = useParams()
