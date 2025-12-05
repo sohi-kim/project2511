@@ -2,6 +2,7 @@ import logging
 from typing import List
 from sentence_transformers import SentenceTransformer
 import numpy as np
+# pip install sentence-transformers -> torch , transformers 등 의존성 라이브러리 설치
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class EmbeddingModel:
         
         self.model = SentenceTransformer(model_name, cache_folder=cache_folder)
         
-        # Get embedding dimension
+        # Get embedding dimension : 모델이 생성하는 문장 임베딩 벡터의 차원 수
         self.dimension = self.model.get_sentence_embedding_dimension()
         
         logger.info(f"✅ Embedding model loaded - Dimension: {self.dimension}")
@@ -39,7 +40,9 @@ class EmbeddingModel:
             Embedding vector
         """
         try:
-            # Add instruction for retrieval tasks
+            # Add instruction for retrieval tasks : 
+            # 자연어 처리(NLP)와 정보 검색(IR) 분야에서 자주 쓰이는 용어로, 사용자가 입력한 쿼리(query)에 대해
+            # 관련성이 높은 문서, 문장, 혹은 데이터 항목을 찾아내는 작업
             text_with_instruction = f"Represent this recipe text for retrieval: {text}"
             
             embedding = self.model.encode(
@@ -120,6 +123,6 @@ class EmbeddingModel:
         """
         vec1 = np.array(embedding1)
         vec2 = np.array(embedding2)
-        
+        # 코사인 유사도
         similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
         return float(similarity)

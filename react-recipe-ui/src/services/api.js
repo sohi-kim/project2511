@@ -40,6 +40,11 @@ api.interceptors.response.use(
     if (isRefreshRequest) {
       return Promise.reject(error);
     }
+     // /auth/me 은 refresh 로직 타면 안 됨
+    const isMeRequest = originalRequest.url.endsWith('/auth/me');
+    if (isMeRequest) {
+      return Promise.reject(error);
+    }
 
     // accessToken 만료 → refresh 시도
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -151,6 +156,16 @@ export const favoriteService = {
   getFavoriteCount: () =>
     api.get('/favorites/count')
 }
+
+
+// 관리자 서비스
+export const adminService = {
+  addCookBook: (formData) =>
+    api.post(`/admin/upload`,formData,{
+      headers: { "Content-Type": "multipart/form-data" }
+    })
+}
+
 
 // 유틸리티 함수들
 export const handleApiError = (error) => {

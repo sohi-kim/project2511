@@ -65,7 +65,7 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", (String)resp.get("refreshToken"))
                 .httpOnly(true)
                 .secure(true) // 운영 환경에서 true로 설정이 필수
-                .path("/auth/refresh")   // 🧡 리액트 post 요청 경로와 맞춰야 함
+                .path("/")   // 🧡 리액트 post 요청 경로와 맞춰야 함
                 .sameSite("None")  // cross-site 요청에서도 쿠키 전송 허용
                 .maxAge(60 * 60 * 24 * 14)
                 .build();
@@ -138,7 +138,7 @@ SameSite=None; Secure → 모든 요청(크로스 사이트 포함)에서 전송
         ResponseCookie clearRefreshToken = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth/refresh")
+                .path("/")
                 .maxAge(0)
                 .sameSite("None")
                 .build();
@@ -149,16 +149,46 @@ SameSite=None; Secure → 모든 요청(크로스 사이트 포함)에서 전송
                 .body(Map.of("message", "로그아웃 성공"));
     }
 
-        @GetMapping("/me")
-        public ResponseEntity<?> me(Authentication auth) {
-        if (auth == null) return ResponseEntity.status(401).build();
+        // @GetMapping("/me")
+        // public ResponseEntity<?> me(Authentication auth) {
+        // if (auth == null) return ResponseEntity.status(401).build();
+        // log.info("me : {}",auth);
+        // User user = (User) auth.getPrincipal();
+        // return ResponseEntity.ok(Map.of(
+        // "email", user.getUsername(),
+        // "name", user.getName()
+        // ));
+        // }
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication auth) {
 
-        User user = (User) auth.getPrincipal();
-        return ResponseEntity.ok(Map.of(
-        "email", user.getUsername(),
-        "name", user.getName()
-        ));
-        }
+    // 1) 인증 객체 존재 여부 검사
+    if (auth == null || !auth.isAuthenticated()) {
+        return ResponseEntity.status(401).build();
+    }
+
+    // 2) anonymousUser 처리 (permitAll 문제나 인증 실패 시)
+    Object principal = auth.getPrincipal();
+    if (principal == null || principal.equals("anonymousUser")) {
+        return ResponseEntity.status(401).build();
+    }
+
+    // 3) principal 이 UserDetails(User 엔티티) 타입인지 확인
+    if (!(principal instanceof User)) {
+        return ResponseEntity.status(401).build();
+    }
+
+    User user = (User) principal;
+
+    // 4) 필드가 null 인 경우에도 안전하도록 값 처리
+    String email = user.getUsername() != null ? user.getUsername() : "";
+    String name = user.getName() != null ? user.getName() : "";
+    log.info("me user : {}",user);
+    return ResponseEntity.ok(Map.of(
+            "email", email,
+            "name", name
+    ));
+}
 
 
     @GetMapping("/health")

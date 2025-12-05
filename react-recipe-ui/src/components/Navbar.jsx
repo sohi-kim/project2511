@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, HeartIcon, ClockIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, DocumentArrowUpIcon ,HeartIcon, ClockIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline'
 import { logout } from '../store/slices/authSlice'
 import { authService } from '../services/api'
 import '../styles/navbar.css'
@@ -28,7 +28,8 @@ function Navbar() {
   const navItems = [
     { path: '/search', label: '검색', icon: MagnifyingGlassIcon },
     { path: '/favorites', label: '즐겨찾기', icon: HeartIcon },
-    { path: '/history', label: '검색 이력', icon: ClockIcon }
+    { path: '/history', label: '검색 이력', icon: ClockIcon },
+    { path: '/admin', label: '레시피 저장', icon: DocumentArrowUpIcon }
   ]
 
   const handleLogout = async () => {

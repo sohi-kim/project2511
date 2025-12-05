@@ -16,9 +16,10 @@ import Search from './pages/Search'
 import RecipeDetail from './pages/RecipeDetail'
 import Favorites from './pages/Favorites'
 import SearchHistory from './pages/SearchHistory'
+import AdminUpload from './pages/AdminUpload'
 
 // Redux
-import { loginSuccess, handleTokenExpired } from './store/slices/authSlice'
+import { loginSuccess, handleTokenExpired, setUser, setAuthenticated, setLoading } from './store/slices/authSlice'
 import { authService } from './services/api'
 
 // Styles
@@ -42,15 +43,21 @@ function AppContent() {
         const res = await authService.me()
 
         if (res.data) {
-          dispatch(loginSuccess({ user: res.data }))
+          dispatch(setUser(res.data));
+          dispatch(setAuthenticated(true));
           console.log("🔄 세션 복구 성공:", res.data)
-        }
+        } 
+       
       } catch (error) {
         if (error.response?.status === 401) {
            console.log("session restore failed! (401) - login required.")
-      } else {
-          console.log("session failed! :", error)
-      }
+        } else {
+            console.log("session failed! :", error)
+        }
+        dispatch(setUser(null));
+        dispatch(setAuthenticated(false));
+      } finally {
+         dispatch(setLoading(false));
       }
     }
 
@@ -77,6 +84,7 @@ function AppContent() {
           <Route path="/recipe/:id" element={<RecipeDetail />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/history" element={<SearchHistory />} />
+          <Route path="/admin" element={<AdminUpload />} />
         </Route>
 
         {/* Not found → 홈으로 */}

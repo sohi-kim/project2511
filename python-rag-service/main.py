@@ -26,7 +26,7 @@ from rag_system.vector_store import PineconeVectorStore
 from rag_system.embedding_model import EmbeddingModel
 from rag_system.llm_chain import RecipeRAGChain
 from rag_system.korean_processor import KoreanTextProcessor
-
+from datetime import datetime, timezone
 # ==========================
 # Pydantic Models
 # ==========================
@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
         # Initialize Pinecone vector store
         vector_store = PineconeVectorStore(
             api_key=os.getenv("PINECONE_API_KEY"),
-            environment=os.getenv("PINECONE_ENVIRONMENT", "gcp-starter"),
+            environment=os.getenv("PINECONE_ENVIRONMENT", "us-east1-aws"),
             index_name=os.getenv("PINECONE_INDEX", "recipes"),
             dimension=embedding_model.get_embedding_dimension()
         )
@@ -107,7 +107,7 @@ async def lifespan(app: FastAPI):
         # Initialize Redis cache
         redis_host = os.getenv("REDIS_HOST", "localhost")
         redis_port = int(os.getenv("REDIS_PORT", 6379))
-        redis_password = os.getenv("REDIS_PASSWORD")
+        redis_password = os.getenv("REDIS_PASSWORD")  #NONE
         
         redis_client = redis.Redis(
             host=redis_host,
@@ -147,7 +147,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:8080").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -156,6 +156,48 @@ app.add_middleware(
 # ==========================
 # Routes
 # ==========================
+from fastapi import FastAPI, UploadFile, Form
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+import fitz
+
+@app.post("/ingest")
+async def ingest_recipe(
+    file: UploadFile,
+    fileName: str = Form(...),
+    manufacturer: str = Form(...),
+    productName: str = Form(...)
+):
+    #     global vector_store, embedding_model, rag_chain, text_processor, redis_client
+    # 1️⃣ PDF 텍스트 추출
+    doc = fitz.open(stream=await file.read(), filetype="pdf")
+    full_text = ""
+    for page in doc:
+        full_text += page.get_text()
+
+    # 2️⃣ 청킹
+    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+    chunks = splitter.split_text(full_text)
+
+    # 3️⃣ 임베딩 생성
+    vectors = embedding_model.embed_documents(chunks)
+
+    # 4️⃣ Pinecone에 저장
+    upserts = []
+    for i, v in enumerate(vectors):
+        upserts.append({
+            "id": f"{manufacturer}_{productName}_{i}",
+            "values": v,
+            "metadata": {
+                "manufacturer": manufacturer,
+                "productName": productName,
+                "chunk_id": i,
+                "text": chunks[i]
+            }
+        })
+
+    vector_store.upsert(vectors=upserts)
+
+    return {"status": "success", "chunks": len(chunks)}
 
 @app.get("/health")
 async def health_check():
@@ -163,7 +205,7 @@ async def health_check():
     return {
         "status": "UP",
         "service": "recipe-rag-service",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 @app.post("/search", response_model=SearchResultResponse)
@@ -220,7 +262,7 @@ async def search_recipes(request: RecipeSearchRequest, background_tasks: Backgro
             total_count=len(recipes),
             recipes=recipes,
             query=request.query,
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.now(timezone.utc).isoformat()
         )
         
         # Cache result
@@ -306,5 +348,5 @@ if __name__ == "__main__":
         app,
         host=host,
         port=port,
-        workers=int(os.getenv("WORKERS", 4))
-    )
+        workers=int(os.getenv("WORKERS", 2))   
+    )  # 애플리케이션을 동시에 실행할 프로세스(worker process) 개수. uvicorn 은 ASGI 서버

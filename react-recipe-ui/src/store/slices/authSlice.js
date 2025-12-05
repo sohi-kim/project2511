@@ -16,7 +16,7 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   user: null,
-  isLoading: false,
+  isLoading: true,    // auth/me 응답보다 빨리 PrivateRoute 가 동작하면 안됨.
   error: null,
   // ← 중요: 쿠키에서 관리하므로 직접 확인 불가
   // API 호출 시 401 응답으로 토큰 만료 감지
@@ -27,6 +27,21 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    // user 정보를 저장 (로그인 성공, /me 응답 성공 시)
+    setUser : (state, action) => {
+      state.user = action.payload;
+    },
+
+    // 인증 여부를 변경
+    setAuthenticated : (state, action) =>{
+      state.isAuthenticated = action.payload;
+    },
+
+    // 인증 로딩 상태 변경
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+
     // 로그인/회원가입 시작
     loginStart: (state) => {
       state.isLoading = true
@@ -108,7 +123,10 @@ export const {
   updateUser,
   clearError,
   handleTokenExpired,
-  validateSession
+  validateSession,
+  setAuthenticated,
+  setLoading,
+  setUser
 } = authSlice.actions
 
 // Reducer를 default export

@@ -39,21 +39,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // @Bean
-    // public DaoAuthenticationProvider authenticationProvider() {
-    //     DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-    //     authProvider.setUserDetailsService(userDetailsService);
-    //     authProvider.setPasswordEncoder(passwordEncoder());
-    //     return authProvider;
-    // }
-
-    // @Bean
-    // public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-    //     return http.getSharedObject(AuthenticationManagerBuilder.class)
-    //         .authenticationProvider(authenticationProvider())
-    //         .build();
-    // }
-
+    
     @Bean
 	public AuthenticationManager authenticationManager(
 			AuthenticationConfiguration config) throws Exception {
@@ -72,9 +58,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/refresh").permitAll()
-                .requestMatchers("/api/auth/me").permitAll()
+                // .requestMatchers("/api/auth/me").permitAll()      // ctrl+f5 로그인 풀림 찾다가 수정함.
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll()
                 // .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
