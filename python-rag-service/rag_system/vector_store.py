@@ -39,14 +39,14 @@ class PineconeVectorStore:
                 dimension=self.dimension,
                 metric="cosine",
                 spec=ServerlessSpec(
-                    cloud="gcp",
-                    region="us-central1"
+                    cloud="aws",
+                    region="us-east-1"
                 )
             )
         
         return self.pc.Index(self.index_name)
     
-    def upsert(self, id: str, vector: List[float], metadata: Dict) -> str:
+    def upsert(self, vectors: List[Dict] ) -> str:
         """
         Upsert vector with metadata
         
@@ -60,8 +60,9 @@ class PineconeVectorStore:
         """
         try:
             self.index.upsert(
-                vectors=[(id, vector, metadata)],
-                namespace=""
+                # vectors=[{"id":id, "values":vectors,"metadata":metadata}],
+                vectors=vectors,
+                namespace="default"
             )
             logger.debug(f"Upserted document: {id}")
             return id

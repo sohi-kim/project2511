@@ -357,3 +357,22 @@ ssh -T git@github.com
 저장소 클론 시 SSH 주소 사용:
 [bash]
 git clone git@github.com:username/repo.git
+
+
+📶----- nginx 파일 업로드 용량
+
+: /etc/nginx/sites-available/nolre.shop.conf 에서 
+[추가] client_max_body_size 20M;
+
+server {
+    client_max_body_size 20M;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+    }
+}
+
+
+[bash]
+sudo nginx -t
+sudo systemctl reload nginx

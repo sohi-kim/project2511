@@ -1,15 +1,16 @@
 import logging
 from typing import List
 from sentence_transformers import SentenceTransformer
+from langchain_core.embeddings import Embeddings
 import numpy as np
 # pip install sentence-transformers -> torch , transformers 등 의존성 라이브러리 설치
 
 logger = logging.getLogger(__name__)
 
-class EmbeddingModel:
+class EmbeddingModel():
     """Korean-optimized embedding model using HuggingFace multilingual-e5"""
     
-    def __init__(self, model_name: str = "multilingual-e5-large", cache_folder: str = "./models"):
+    def __init__(self, model_name: str = "intfloat/multilingual-e5-large", cache_folder: str = None):
         """
         Initialize embedding model
         

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { adminService } from '../services/api'
 import '../index.css'
+import "../styles/admin-upload.css";
+
 const AdminUpload = () => {
   const [form, setForm] = useState({
     applianceType: "",
@@ -31,20 +33,36 @@ const AdminUpload = () => {
     alert("업로드 완료!");
   };
 
-  return (
-    <div>
-      <h2>주방가전 요리책 업로드</h2>
-      <form onSubmit={handleSubmit}>
+ return (
+    <div className="admin-container">
+      <h2 className="admin-title">주방가전 요리책 업로드</h2>
 
-        <input name="applianceType" placeholder="가전종류" onChange={handleChange} />
-        <input name="manufacturer" placeholder="제조사" onChange={handleChange} />
-        <input name="productName" placeholder="제품명" onChange={handleChange} />
-        <input name="totalPages" placeholder="총 페이지수" type="number" onChange={handleChange} />
+      <div className="form-group">
+        <label>가전종류</label>
+        <input name="applianceType" type="text" />
+      </div>
 
-        <input type="file" onChange={e => setFile(e.target.files[0])} />
+      <div className="form-group">
+        <label>제조사</label>
+        <input name="manufacturer" type="text" />
+      </div>
 
-        <button type="submit">업로드</button>
-      </form>
+      <div className="form-group">
+        <label>제품명</label>
+        <input name="productName" type="text" />
+      </div>
+
+      <div className="form-group">
+        <label>총 페이지 수</label>
+        <input name="totalPages" type="number" />
+      </div>
+
+      <label className="file-input-wrapper">
+        📄 PDF 파일 업로드
+        <input type="file" />
+      </label>
+
+      <button className="upload-btn">업로드</button>
     </div>
   );
 };

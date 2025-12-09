@@ -163,7 +163,10 @@ export const adminService = {
   addCookBook: (formData) =>
     api.post(`/admin/upload`,formData,{
       headers: { "Content-Type": "multipart/form-data" }
-    })
+    }),
+  getProducts: (category) => {
+    return api.get(`/admin/products?category=${category}`)
+  }   
 }
 
 

@@ -1,0 +1,103 @@
+/* 전체 컨테이너 */
+.admin-container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  font-family: "Arial", sans-serif;
+}
+
+/* 제목 스타일 */
+.label-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* 입력 요소 */
+.input-select,
+.input-text,
+.input-file {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* 카드 박스 공통 스타일 */
+.card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* 섹션 제목 */
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* 폼 */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 라벨 */
+.label {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+/* 버튼 */
+.btn-submit {
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 14px;
+  font-size: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 150px;
+}
+
+.btn-submit:hover {
+  background-color: #1e4fc4;
+}
+
+/* 대시보드 테이블 */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table thead {
+  background-color: #f3f4f6;
+  font-weight: bold;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* 빈 목록 텍스트 */
+.empty-text {
+  color: #777;
+  padding: 10px 0;
+}

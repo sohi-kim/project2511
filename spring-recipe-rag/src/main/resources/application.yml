@@ -57,6 +57,10 @@ spring:
       allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
       allowed-headers: '*'
       allow-credentials: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
 
 # Server Configuration
 server:

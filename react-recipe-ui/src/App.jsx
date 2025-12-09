@@ -24,6 +24,7 @@ import { authService } from './services/api'
 
 // Styles
 import './index.css'
+import AdminDashboard from './pages/AdminDashboard'
 
 /**
  * AppContent 컴포넌트
@@ -84,7 +85,7 @@ function AppContent() {
           <Route path="/recipe/:id" element={<RecipeDetail />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/history" element={<SearchHistory />} />
-          <Route path="/admin" element={<AdminUpload />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
 
         {/* Not found → 홈으로 */}

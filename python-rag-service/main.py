@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 import redis
 from dotenv import load_dotenv
-
+# pip install python-multipart
 # Load environment variables
 load_dotenv()
 
@@ -82,8 +82,8 @@ async def lifespan(app: FastAPI):
         
         # Initialize embedding model
         embedding_model = EmbeddingModel(
-            model_name=os.getenv("EMBEDDING_MODEL", "multilingual-e5-large"),
-            cache_folder=os.getenv("MODEL_CACHE_DIR", "./models")
+            model_name=os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-large"),
+            # cache_folder=os.getenv("MODEL_CACHE_DIR", "./models")  # docker 에서 기본 캐쉬 경로 ~/.cache/huggingface/hub 사용하지 않을 때
         )
         logger.info("✅ Embedding model initialized")
         
@@ -158,7 +158,27 @@ app.add_middleware(
 # ==========================
 from fastapi import FastAPI, UploadFile, Form
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import fitz
+# import fitz   # pip install PyMuPDF
+import pdfplumber   # pip install pdfplumber - 한글 최적
+from io import BytesIO
+
+import re
+
+def is_cid_text(text: str):
+    # CID 패턴이 매우 반복되면 CIDFont 기반 PDF
+    cid_pattern = r"\(cid:\d+\)"
+    matches = re.findall(cid_pattern, text)
+    
+    # 전체 텍스트 중 상당 부분이 CID 패턴이면 텍스트 없는 PDF
+    if len(matches) > 10 and len(matches) / max(1, len(text)) > 0.1:
+        return True
+    return False
+
+def contains_korean(text):
+    return any("\uac00" <= ch <= "\ud7a3" for ch in text)
+
+import pytesseract    # pip install pytesseract
+from pdf2image import convert_from_bytes    # pip install pdf2image
 
 @app.post("/ingest")
 async def ingest_recipe(
@@ -169,23 +189,39 @@ async def ingest_recipe(
 ):
     #     global vector_store, embedding_model, rag_chain, text_processor, redis_client
     # 1️⃣ PDF 텍스트 추출
-    doc = fitz.open(stream=await file.read(), filetype="pdf")
+    # CID PDF 는 텍스트 추출 못함. OCR 사용 
+    # sudo apt update
+    # sudo apt install tesseract-ocr
+    # sudo apt install tesseract-ocr-kor
+
+
     full_text = ""
-    for page in doc:
-        full_text += page.get_text()
+    with pdfplumber.open(BytesIO(await file.read())) as pdf:
+         for page in pdf.pages:
+            text = page.extract_text() or ""
+
+            if is_cid_text(text) or not contains_korean(text):
+                # OCR fallback
+                img = page.to_image(resolution=300).original
+                ocr_text = pytesseract.image_to_string(img, lang="kor")
+                full_text += ocr_text
+            else:
+                full_text += text
 
     # 2️⃣ 청킹
     splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
     chunks = splitter.split_text(full_text)
 
     # 3️⃣ 임베딩 생성
-    vectors = embedding_model.embed_documents(chunks)
+    vectors = embedding_model.embed_batch(chunks)
 
     # 4️⃣ Pinecone에 저장
+    import hashlib
+    file_hash = hashlib.md5(f"{manufacturer}_{productName}".encode('utf-8')).hexdigest()   # id 식별
     upserts = []
     for i, v in enumerate(vectors):
         upserts.append({
-            "id": f"{manufacturer}_{productName}_{i}",
+            "id":  f"{file_hash}_{i}",
             "values": v,
             "metadata": {
                 "manufacturer": manufacturer,
@@ -350,3 +386,5 @@ if __name__ == "__main__":
         port=port,
         workers=int(os.getenv("WORKERS", 2))   
     )  # 애플리케이션을 동시에 실행할 프로세스(worker process) 개수. uvicorn 은 ASGI 서버
+# uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2    
+

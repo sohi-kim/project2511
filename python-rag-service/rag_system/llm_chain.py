@@ -1,8 +1,8 @@
 import logging
 from typing import List, Dict, Optional
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.chains import RetrievalQA
-from langchain.memory import ConversationBufferMemory
+# from langchain.chains import RetrievalQA
+from langchain_classic.memory import ConversationBufferMemory
 import asyncio
 
 logger = logging.getLogger(__name__)
