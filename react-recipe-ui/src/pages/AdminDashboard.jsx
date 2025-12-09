@@ -12,18 +12,18 @@ const categories = [
   "에어프라이어"
 ];
 
-const initialData = {
-  전기밥솥: [],
-  쥬서기: [],
-  믹서기: [],
-  오븐: [],
-  전자레인지: [],
-  에어프라이어: []
-};
+// const initialData = {
+//   전기밥솥: [],
+//   쥬서기: [],
+//   믹서기: [],
+//   오븐: [],
+//   전자레인지: [],
+//   에어프라이어: []
+// };
 
 export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState("전기밥솥");
-  const [products, setProducts] = useState(initialData);
+  const [products, setProducts] = useState([]);
 
   const [manufacturer, setManufacturer] = useState("");
   const [productName, setProductName] = useState("");
