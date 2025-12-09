@@ -102,18 +102,19 @@ SameSite=None; Secure → 모든 요청(크로스 사이트 포함)에서 전송
                 return ResponseEntity.status(401).body(Map.of("message", "유효하지 않은 Refresh Token"));
         }
         
-        String newAccessToken = authService.refresh(refreshToken);
-        ResponseCookie newAccessCookie = ResponseCookie.from("accessToken", newAccessToken)
+        Map<String, Object> resp = authService.refreshAccessToken(refreshToken);
+        ResponseCookie newAccessCookie = ResponseCookie.from("accessToken", (String) resp.get("accessToken"))
                 .httpOnly(true)
-                .secure(true)
+                .secure(true) // 개발 환경에서는 false, 운영 환경에서는 true로 설정 가능
                 .path("/")
-                .maxAge(jwtExpirationInMs / 1000)
-                .sameSite("Lax")
+                .maxAge(jwtExpirationInMs / 1000)    // 초 단위
+                .sameSite("Lax")  
+                // 개발 환경에서 CSRF 공격 방어. Lax: 동일 사이트 및 일부 교차 사이트 요청에서만 쿠키 전송
                 .build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, newAccessCookie.toString())
-                .body("Access Token 재발급 완료");
+                .body(resp);
     }
 
     @PostMapping("/logout")

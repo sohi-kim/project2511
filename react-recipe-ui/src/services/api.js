@@ -47,7 +47,9 @@ api.interceptors.response.use(
     }
 
     // accessToken 만료 → refresh 시도
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if ((error.response?.status === 401 && !originalRequest._retry) || 
+      (error.response?.status === 403 &&  error.response.data?.error === "INVALID_TOKEN")
+     ) {
       originalRequest._retry = true;
 
       try {

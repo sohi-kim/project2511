@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.kitchen.recipe.security.CustomAccessDeniedHandler;
+import com.kitchen.recipe.security.JwtAuthEntryPoint;
 import com.kitchen.recipe.security.JwtAuthenticationFilter;
 import com.kitchen.recipe.security.JwtTokenProvider;
 import com.kitchen.recipe.service.CustomUserDetailsService;
@@ -33,6 +35,8 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -56,6 +60,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthEntryPoint).accessDeniedHandler(customAccessDeniedHandler)) //403 refresh 처리
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -158,7 +158,8 @@ export default function AdminDashboard() {
       <div className="card">
         <h2 className="section-title">📊 {selectedCategory} 등록 목록</h2>
 
-        {products[selectedCategory].length === 0 ? (
+        {!products[selectedCategory] ? ( <div className="empty-text">Loading....</div>) :
+           products[selectedCategory] .length === 0 ? (
           <div className="empty-text">등록된 제품이 없습니다.</div>
         ) : (
           <table className="table">

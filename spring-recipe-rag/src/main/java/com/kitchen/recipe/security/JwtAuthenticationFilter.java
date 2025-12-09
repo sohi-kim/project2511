@@ -21,6 +21,8 @@ import io.jsonwebtoken.JwtException;
 
 import java.io.IOException;
 
+import javax.security.sasl.AuthenticationException;
+
 @Slf4j
 @RequiredArgsConstructor
 // @Component   // SecurityConfig 에서 빈으로 등록하므로 주석처리
@@ -52,13 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info("인증된 사용자: {}", authentication.getName());
             }
             // ⬇ JwtAuthenticationFilter → token 검사 → 만료/유효성 오류 → 401 리턴
-        } catch (ExpiredJwtException e) {
-            // ★ AccessToken 만료 → 401
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Access token expired");
-            return;
-
-        } catch (JwtException | IllegalArgumentException e) {
+        }catch (ExpiredJwtException e) {
+            request.setAttribute("error", "TOKEN_EXPIRED");
+            throw new AuthenticationException("TOKEN_EXPIRED") {};
+        } catch (JwtException e) {
+            request.setAttribute("error", "INVALID_TOKEN");
+            throw new AuthenticationException("INVALID_TOKEN") {};
+        } catch (IllegalArgumentException e) {
             // ★ 기타 JWT 오류 → 401
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid JWT");

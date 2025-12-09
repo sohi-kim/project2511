@@ -75,7 +75,7 @@ public class AuthService {
 
             String accessToken = jwtTokenProvider.generateAccessToken(authentication);
             // String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);   // JWT 로 만들지 않고UUID 로 만듬.(db에 저장)
 
              // *. SecurityContext에 저장
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -90,12 +90,12 @@ public class AuthService {
         }
     }
 
-    // Access Token 재발급 - New
-    public String refresh(String refreshTokenValue) {
+    // refreshTokenValue 을 db에서 검증
+    private RefreshToken refresh(String refreshTokenValue) {
         RefreshToken refresh = refreshTokenService.validateRefreshToken(refreshTokenValue)
                 .orElseThrow(() -> new RuntimeException("RefreshToken invalid"));
 
-        return jwtTokenProvider.createAccessToken(refresh.getUser().getEmail());
+        return refresh;
     }
 
         // 로그아웃
@@ -107,16 +107,17 @@ public class AuthService {
     }
 
     public Map<String, Object> refreshAccessToken(String refreshToken) {
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new AppException("유효하지 않은 리프레시 토큰입니다.", 401);
-        }
+        // if (!jwtTokenProvider.validateToken(refreshToken)) {
+        //     throw new AppException("유효하지 않은 리프레시 토큰입니다.", 401);
+        // }
+        RefreshToken refresh = refresh(refreshToken);
+        // String email = jwtTokenProvider.getUserEmailFromToken(refreshToken);
 
-        String email = jwtTokenProvider.getUserEmailFromToken(refreshToken);
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findById(refresh.getUser().getId())
             .orElseThrow(() -> new AppException("사용자를 찾을 수 없습니다.", 404));
 
-        String newAccessToken = jwtTokenProvider.generateAccessTokenFromEmail(email);
-
+        // String newAccessToken = jwtTokenProvider.generateAccessTokenFromEmail(email);
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail());
         return buildAuthResponse(user, newAccessToken, refreshToken);
     }
 
