@@ -16,8 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.kitchen.recipe.dto.ApplianceRecipeResponse;
 import com.kitchen.recipe.entity.ApplianceRecipe;
+import com.kitchen.recipe.entity.Recipe;
 import com.kitchen.recipe.repository.ApplianceRepository;
+import com.kitchen.recipe.repository.RecipeRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class RecipeService {
 
     private final ApplianceRepository repository;
-    private final WebClient webClient = WebClient.create("http://localhost:8000");
+    private final RecipeRepository recipeRepository;
+    private final WebClient webClient;
     private static final String SAVE_DIR = "/home/sohkim/rbook";  // 저장 위치
 
    public List<ApplianceRecipe> getProductsByCategory(String category) {
@@ -47,46 +51,73 @@ public class RecipeService {
             .toList();
     }
 
-
-    public ApplianceRecipe processUpload(String applianceType,
+    public ApplianceRecipe prepSave(String applianceType,
                               String manufacturer,
                               String productName,
-                              int totalPages,
-                              MultipartFile file) {
-
-        String fileName = manufacturer + "_" + productName + ".pdf";
-       
-        String fileHashString = savePdfFile(file, fileName); 
-        File saveFile = new File(SAVE_DIR, fileName);    
-       
-
-            // 1️⃣ DB 저장
-          ApplianceRecipe recipe = ApplianceRecipe.builder()
+                              int totalPages) {
+         String fileName = manufacturer + "_" + productName + ".pdf";                                
+         ApplianceRecipe recipe = ApplianceRecipe.builder()
                     .applianceType(applianceType)
                     .manufacturer(manufacturer)
                     .productName(productName)
                     .fileName(fileName)
                     .totalPages(totalPages)
-                    .fileHash(fileHashString)
-                    .uploadStatus("UPLOADED")
+                    .uploadStatus("저장 중")
                     .build();
+         return repository.save(recipe);  
 
-            
+    }
+
+    public ApplianceRecipe processUpload(ApplianceRecipe recipe,
+                        //       String applianceType,
+                        //       String manufacturer,
+                        //       String productName,
+                        //       int totalPages,
+                              MultipartFile file) throws Exception{
+
+        // String fileName = manufacturer + "_" + productName + ".pdf";
+       
+        String fileHashString = savePdfFile(file, recipe.getFileName()); 
+        File saveFile = new File(SAVE_DIR, recipe.getFileName());    
+       
+
+            // 1️⃣ DB 저장
+        //   ApplianceRecipe recipe = ApplianceRecipe.builder()
+        //             .applianceType(applianceType)
+        //             .manufacturer(manufacturer)
+        //             .productName(productName)
+        //             .fileName(fileName)
+        //             .totalPages(totalPages)
+        //             .fileHash(fileHashString)
+        //             .uploadStatus("UPLOADED")
+        //             .build();
 
             // 2️⃣ Python RAG 서버에 파일 전송
-            webClient.post()
-                    .uri("/ingest")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .body(BodyInserters.fromMultipartData("file",new FileSystemResource(saveFile))  // file.getResource()
-                            .with("fileName", fileName)
-                            .with("manufacturer", manufacturer)
-                            .with("productName", productName)
-                    )
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .subscribe();
-            
-            return repository.save(recipe);        
+            ApplianceRecipeResponse  newRecipes = webClient.post()
+                        .uri("/ingest")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .body(BodyInserters.fromMultipartData("file",new FileSystemResource(saveFile))  // file.getResource()
+                                .with("fileName", recipe.getFileName())
+                                .with("manufacturer", recipe.getManufacturer())
+                                .with("productName", recipe.getProductName())
+                        )
+                        .retrieve()
+                        .bodyToMono(ApplianceRecipeResponse.class)
+                        //     .subscribe();    // 비동기처리 - db 저장시 트랜잭션 처리 안됨.
+                        .block();
+                                        
+            newRecipes.getRecipeTitles().stream()
+                .map(title -> Recipe.builder()
+                        .title(title)
+                        .appliance(recipe.getApplianceType())
+                        .bookName(newRecipes.getFileName())
+                        .build()
+                )
+                .forEach(recipeRepository::save);
+            log.info("저장된 레시피 {} 개",newRecipes.getRecipeTitles().size());
+            recipe.setFileHash(fileHashString);
+            recipe.setUploadStatus("UPLOADED");   
+         return repository.save(recipe);        
 
     }
 
@@ -159,5 +190,9 @@ public class RecipeService {
         throw new RuntimeException("Fingerprint 계산 중 오류 발생: " + e.getMessage());
     }
 }
+
+    public long getCount(){
+        return recipeRepository.count();
+    }
 }
 

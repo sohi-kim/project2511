@@ -94,7 +94,7 @@ async def lifespan(app: FastAPI):
             index_name=os.getenv("PINECONE_INDEX", "recipes"),
             dimension=embedding_model.get_embedding_dimension()
         )
-        logger.info("✅ Pinecone vector store initialized")
+        logger.info(f"✅ Pinecone vector store initialized.-{vector_store.get_index_stats()}")
         
         # Initialize RAG chain
         rag_chain = RecipeRAGChain(
@@ -158,28 +158,13 @@ app.add_middleware(
 # ==========================
 from fastapi import FastAPI, UploadFile, Form
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# import fitz   # pip install PyMuPDF
+
 import pdfplumber   # pip install pdfplumber - 한글 최적
 from io import BytesIO
-
-import re
-
-def is_cid_text(text: str):
-    # CID 패턴이 매우 반복되면 CIDFont 기반 PDF
-    cid_pattern = r"\(cid:\d+\)"
-    matches = re.findall(cid_pattern, text)
-    
-    # 전체 텍스트 중 상당 부분이 CID 패턴이면 텍스트 없는 PDF
-    if len(matches) > 10 and len(matches) / max(1, len(text)) > 0.1:
-        return True
-    return False
-
-def contains_korean(text):
-    return any("\uac00" <= ch <= "\ud7a3" for ch in text)
-
 import pytesseract    # pip install pytesseract
 from pdf2image import convert_from_bytes    # pip install pdf2image
 
+from rag_system.pdfProcessor import is_cid_text,contains_korean,extract_title_candidates,filter_food_titles,extract_title_candidates_from_ocr_page2
 @app.post("/ingest")
 async def ingest_recipe(
     file: UploadFile,
@@ -194,9 +179,15 @@ async def ingest_recipe(
     # sudo apt install tesseract-ocr
     # sudo apt install tesseract-ocr-kor
 
+    # A) PDF 원본 바이트
+    pdf_bytes = await file.read()
+
+    # # B) 제목 후보 추출
+    title_candidates = extract_title_candidates(pdf_bytes)
 
     full_text = ""
-    with pdfplumber.open(BytesIO(await file.read())) as pdf:
+    # with pdfplumber.open(BytesIO(await file.read())) as pdf:   # 위에서 이미 한번 읽은 파일
+    with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
          for page in pdf.pages:
             text = page.extract_text() or ""
 
@@ -205,13 +196,20 @@ async def ingest_recipe(
                 img = page.to_image(resolution=300).original
                 ocr_text = pytesseract.image_to_string(img, lang="kor")
                 full_text += ocr_text
+
+                ocr_title_candidates = extract_title_candidates_from_ocr_page2(page, lang="kor")
+                title_candidates.extend(ocr_title_candidates)
             else:
                 full_text += text
+
+   # C) LLM으로 음식명만 확정
+    recipe_titles = await filter_food_titles(title_candidates)
+    logger.info(f'추출된 레시피 갯수 : {len(recipe_titles)}')
 
     # 2️⃣ 청킹
     splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
     chunks = splitter.split_text(full_text)
-
+    
     # 3️⃣ 임베딩 생성
     vectors = embedding_model.embed_batch(chunks)
 
@@ -233,7 +231,7 @@ async def ingest_recipe(
 
     vector_store.upsert(vectors=upserts)
 
-    return {"status": "success", "chunks": len(chunks)}
+    return {"status": "success", "chunks": len(chunks),"recipeTitles":recipe_titles, "fileName":f"{manufacturer}_{productName}.pdf"}
 
 @app.get("/health")
 async def health_check():

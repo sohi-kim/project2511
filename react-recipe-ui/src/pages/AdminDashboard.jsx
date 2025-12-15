@@ -33,7 +33,7 @@ export default function AdminDashboard() {
       adminService.getProducts(selectedCategory)
         .then(res => {
           setProducts(prev => ({
-            ...prev,
+            ...prev,   //products 상태의 다른 카테고리들을 그대로 유지
             [selectedCategory]: res.data
           }));
         })
@@ -69,31 +69,33 @@ export default function AdminDashboard() {
       formData.append("totalPages", 0);
       formData.append("file", file);
   
-    adminService.addCookBook(formData)
+    adminService.addCookBook(formData,{timeout: 600000})  // 600,000 ms
           .then(res => {
-              setProducts(prev => ({
-                ...prev,
-                [selectedCategory]: res.data
-              }));
+              newItem.uploadStatus='UPLOADED'
+              setProducts(prev => {
+              const updated = {...prev};
+              updated[selectedCategory] = updated[selectedCategory].map(item => 
+                item.id === tempId? { ...item, uploadStatus: 'UPLOADED' }:item);
+              return updated;
+            });
                   
             console.log("업로드 성공:", res.data)
           })
           .catch(err => {
+            // 백엔드에서 내려준 메시지 꺼내기
+            const errorMessage = err.response?.data?.message || "알 수 없는 오류가 발생했습니다.";
+            alert(errorMessage);   // 사용자에게 메시지 출력
             setProducts(prev => {
               const updated = {...prev};
-              updated[selectedCategory] = updated[selectedCategory].map(item =>
-                item.id === tempId? {...item, status: '실패'}: item
-              );
+              updated[selectedCategory] = updated[selectedCategory].filter(item => item.id !== tempId);
               return updated;
             });
             console.error("에러 발생:", err)
           })
   
-
-
     setManufacturer("");
     setProductName("");
-    setFile(null);
+    setFile(None);
   };
 
   return (

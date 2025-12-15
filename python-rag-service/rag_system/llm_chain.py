@@ -25,7 +25,7 @@ class RecipeRAGChain:
         
         # Initialize LLM
         self.llm = ChatOpenAI(
-            model="gpt-4",
+            model="gpt-4.1-mini",
             api_key=llm_api_key,
             temperature=0.7,
             max_tokens=1500

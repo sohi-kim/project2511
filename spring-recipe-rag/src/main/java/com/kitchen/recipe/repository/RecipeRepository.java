@@ -21,4 +21,6 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     
     @Query("SELECT r FROM Recipe r WHERE r.category = :category")
     List<Recipe> findByCategory(@Param("category") String category);
+
+    
 }

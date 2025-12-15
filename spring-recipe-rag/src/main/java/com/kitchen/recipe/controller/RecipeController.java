@@ -3,6 +3,8 @@ package com.kitchen.recipe.controller;
 import com.kitchen.recipe.dto.RecipeDto;
 import com.kitchen.recipe.entity.User;
 import com.kitchen.recipe.service.RecipeSearchService;
+import com.kitchen.recipe.service.RecipeService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,13 @@ import java.util.Map;
 public class RecipeController {
 
     private final RecipeSearchService recipeSearchService;
+    private final RecipeService recipeService;
+
+    @GetMapping("/count")
+    public ResponseEntity<?> getCount(){
+
+        return ResponseEntity.ok().body(Map.of("count",recipeService.getCount()));
+    }
 
     @GetMapping("/search")
     public ResponseEntity<?> searchRecipes(

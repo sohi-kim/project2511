@@ -11,7 +11,7 @@ axios.defaults.withCredentials = true;
 const api = axios.create({
   // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
   baseURL: 'https://nolre.shop/api',
-  timeout: 30000,
+  timeout: 600000,
   // ← 중요: 쿠키를 요청에 자동으로 포함시킬 수 있도록 설정
   withCredentials: true
 })
@@ -118,6 +118,8 @@ export const recipeService = {
     api.get('/recipes/search', {
       params: { query, appliance, limit }
     }),
+
+  getRecipeCount: () => api.get('/recipes/count') ,
 
   // 레시피 상세 조회
   getDetail: (id) =>

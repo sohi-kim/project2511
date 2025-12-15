@@ -1,5 +1,7 @@
 package com.kitchen.recipe.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kitchen.recipe.dto.RecipeDto;
 import com.kitchen.recipe.entity.Recipe;
 import com.kitchen.recipe.entity.SearchHistory;
@@ -15,7 +17,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -85,8 +86,13 @@ public class RecipeSearchService {
      */
     private List<RecipeDto> parseRagResponse(String response) {
         List<RecipeDto> recipes = new ArrayList<>();
-        // TODO: JSON 파싱 및 Recipe 객체 생성
-        // 실제 구현에서는 ObjectMapper 사용
+        // JSON 파싱 및 Recipe 객체 생성     //  ObjectMapper 사용
+        ObjectMapper mapper = new ObjectMapper();
+        try{
+            recipes = mapper.readValue(response, new TypeReference<List<RecipeDto>> (){ });
+        } catch(Exception e){
+            log.info("파싱 오류: {}",e.getMessage());
+        }
         return recipes;
     }
 
@@ -182,3 +188,4 @@ public class RecipeSearchService {
             .collect(Collectors.toList());
     }
 }
+// redis 모든 키 삭제 : redis-cli FLUSHALL

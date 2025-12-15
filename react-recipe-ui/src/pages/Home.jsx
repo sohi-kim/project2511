@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { MagnifyingGlassIcon, HeartIcon, ClockIcon } from '@heroicons/react/24/outline'
 import '../styles/home.css'
+import { recipeService } from '../services/api'
 
 function Home() {
   const { user } = useSelector(state => state.auth)
   const { count: favoriteCount } = useSelector(state => state.favorite)
+  const  [recipeCount,setRecipeCount ] = useState(0)
 
   const appliances = [
     { name: '전기밥솥', icon: '🍚', description: '밥 요리' },
@@ -16,6 +18,16 @@ function Home() {
     { name: '전자레인지', icon: '⏱️', description: '간편 요리' },
     { name: '에어프라이어', icon: '🍟', description: '튀김' }
   ]
+
+  useEffect(() => {
+        recipeService.getRecipeCount()
+          .then(res => {
+            console.log("응답:", res.data.count); 
+            setRecipeCount(res.data.count);
+          })
+          .catch(err => console.error("레시피 총 개수 조회 실패:", err));
+    }, []);
+
 
   const features = [
     {
@@ -133,14 +145,14 @@ function Home() {
             color: '#166534',
             marginBottom: '0.5rem'
           }}>
-            기능
+            레시피
           </p>
           <p style={{
             fontSize: '2rem',
             fontWeight: 'bold',
             color: '#166534'
           }}>
-            3
+            {recipeCount}
           </p>
         </div>
       </div>

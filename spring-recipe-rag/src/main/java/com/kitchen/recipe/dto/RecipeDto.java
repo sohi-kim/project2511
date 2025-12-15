@@ -29,7 +29,7 @@ public class RecipeDto {
         return RecipeDto.builder()
             .id(recipe.getId())
             .title(recipe.getTitle())
-            .description(recipe.getDescription())
+            .description(recipe.getBookName())
             .appliance(recipe.getAppliance())
             .ingredients(recipe.getIngredients())
             .instructions(recipe.getInstructions())

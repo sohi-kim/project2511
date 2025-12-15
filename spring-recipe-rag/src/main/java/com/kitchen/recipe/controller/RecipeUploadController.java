@@ -31,16 +31,24 @@ public class RecipeUploadController {
             @RequestParam int totalPages,
             @RequestParam MultipartFile file) {
 
-        ApplianceRecipe result = recipeService.processUpload(applianceType, manufacturer, productName, totalPages, file);
+       try { 
+        ApplianceRecipe prep = recipeService.prepSave(applianceType, manufacturer, productName, totalPages);
+        ApplianceRecipe result = recipeService.processUpload(prep, file);
+        
+        
         return ResponseEntity.ok(Map.of(
                 "status", "COMPLETED",
                 "id", result.getId(),
                 "message", "등록 및 RAG 인덱싱 완료"
         ));
+        }catch(Exception e){
+            return ResponseEntity.badRequest().body(Map.of("message",e.getMessage()));
+        }
     }
 
     @GetMapping("/products")
     public ResponseEntity<?> getProducts(@RequestParam String category) {
+
         List<ApplianceRecipe> list = recipeService.getProductsByCategory(category);
         return ResponseEntity.ok(list);
     }

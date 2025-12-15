@@ -25,7 +25,7 @@ public class Recipe {
     private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String bookName;
 
     @Column(length = 100)
     private String appliance;  // 전기밥솥, 쥬서기, 믹서기 등
